@@ -1,5 +1,6 @@
 # Projekt — Design Spec
 **Date:** 2026-08-21  
+**Revised:** 2026-08-23  
 **Author:** Bryce Leonard (FortyAU)  
 **Status:** Approved for implementation
 
@@ -7,22 +8,28 @@
 
 ## Overview
 
-Projekt is a dual-sided B2B SaaS application for enterprise healthcare account management. It gives FortyAU project managers a unified workspace to manage client engagements — combining uploaded context files, structured project data (SOW, risks, issues, stakeholders), and a read-only Azure DevOps integration — while exposing a curated, professional client portal for stakeholder-facing project visibility.
+Projekt is a dual-sided B2B SaaS application for agency project management. It gives agency team members a unified workspace to manage client engagements — combining uploaded context files, structured project data (SOW, risks, issues, stakeholders), and a read-only Azure DevOps integration — while exposing a curated, professional client portal for stakeholder-facing project visibility.
 
-Starting as an internal FortyAU tool, Projekt is architected as multi-tenant SaaS from day one so it can be sold to other consultancies managing enterprise healthcare accounts.
+Starting as an internal FortyAU tool, Projekt is architected as multi-tenant SaaS from day one so it can be sold to other agencies managing enterprise client accounts.
 
 ---
 
 ## Users & Roles
 
+**Org Admin (`admin` role)**  
+The user who creates the org (typically the agency principal). Sees and manages all projects in the org. Can invite PMs and assign them to specific projects. Can invite clients to specific projects.
+
 **PM (`pm` role)**  
-FortyAU team members. Full read/write access to all project data within their org. Manage projects, upload context files, configure ADO connections, run CRUD on all project entities, invite clients.
+Agency team members. Full read/write access to projects they are assigned to. Cannot see projects they have not been added to. Manage context files, configure ADO connections, run CRUD on all project entities, invite clients to their projects.
 
 **Client (`client` role)**  
-Client stakeholders (e.g., HCA, HealthStream). Read-only, curated view. See only projects they are explicitly invited to. Cannot see internal PM notes or raw backlog noise.
+Client stakeholders. Read-only, curated view. See only projects they are explicitly invited to. Cannot see internal PM notes or raw backlog noise.
 
 **Org**  
-Each organization (e.g., FortyAU, a future customer consultancy) is a tenant. All data is scoped to an org. A user belongs to exactly one org.
+Each organization (e.g., FortyAU, a future agency customer) is a tenant. All data is scoped to an org. A user belongs to exactly one org.
+
+**Project membership example:**  
+Bryce (admin) has three projects. He adds Mike (pm) to two of them and Laurel (pm) to one. When Mike logs in he sees his two projects; Laurel sees her one. Bryce sees all three.
 
 ---
 
@@ -31,7 +38,7 @@ Each organization (e.g., FortyAU, a future customer consultancy) is a tenant. Al
 ```
 Next.js 15 App Router (Vercel, Node.js / Fluid Compute)
 ├── /app/(auth)               — Google sign-in via Firebase Auth
-├── /app/(pm)                 — PM workspace (role-gated)
+├── /app/(pm)                 — PM + Admin workspace (role-gated)
 ├── /app/(client)             — Client portal (role-gated)
 └── /app/api
     ├── /ado/[projectId]      — ADO REST proxy (PAT never reaches browser)
@@ -45,15 +52,16 @@ Firebase
 
 **Multi-tenancy:** Every Firestore document carries `orgId`. Security rules enforce org isolation at the database level — a compromised client SDK call cannot read another org's data.
 
-**Role enforcement:** Two layers. Firestore security rules check `role` on the user doc. Next.js middleware gates route groups `(pm)` and `(client)` before any page renders.
+**Role enforcement:** Two layers. Firestore security rules check `role` on the user doc and project membership arrays. Next.js middleware gates route groups `(pm)` and `(client)` before any page renders.
 
-**ADO PAT security:** PATs are AES-256 encrypted before writing to Firestore. The encryption key lives in a Vercel environment variable, never in code. Decryption happens only inside `/api/ado` routes, after verifying the requesting user's `orgId` owns the project. The decrypted PAT is never logged or returned to the client.
+**Project-level access rules:**
+- `admin` — reads/writes all projects in their org
+- `pm` — reads/writes only projects where their `uid` appears in `pmMembers[]`
+- `client` — reads only projects where their `uid` appears in `invitedClients[]`
 
-**File security:** Storage paths are prefixed `/{orgId}/{projectId}/`. Rules enforce `orgId` match. Downloads use short-lived signed URLs generated server-side — no file is publicly accessible by URL.
+**ADO PAT security:** PATs are AES-256 encrypted before writing to Firestore. The encryption key lives in a Vercel environment variable, never in code. Decryption happens only inside `/api/ado` routes, after verifying the requesting user has access to that project. The decrypted PAT is never logged or returned to the client.
 
-**Client isolation:** Projects carry `invitedClients: [uid, ...]`. Firestore rules enforce a client user can only read projects where their uid is in that array.
-
-**HIPAA note:** Firebase/GCP is HIPAA-eligible. A Business Associate Agreement (BAA) with Google must be in place before any client org goes live. This is a configuration step, not a code change.
+**File security:** Storage paths are prefixed `/{orgId}/{projectId}/`. Rules enforce access via project membership. Downloads use short-lived signed URLs generated server-side — no file is publicly accessible by URL.
 
 ---
 
@@ -77,21 +85,24 @@ Firebase
 
 ```
 orgs/{orgId}
-  name, plan, createdAt
+  name, plan, createdAt, adminUid
 
 orgs/{orgId}/users/{uid}
-  email, displayName, role: "pm" | "client", createdAt
+  email, displayName
+  role: "admin" | "pm" | "client"
+  createdAt
 
 orgs/{orgId}/projects/{projectId}
   name, description
-  techStack: string[]       — e.g. ["React", "Kotlin", "Azure"]
+  techStack: string[]       — e.g. ["React", "Next.js", "Azure"]
   pmTools: string[]         — e.g. ["ADO", "Figma"]
   status: "active" | "archived"
   adoOrgUrl: string         — e.g. "https://dev.azure.com/myorg"
   adoProject: string        — ADO project name
   adoTeam: string           — ADO team name (required for sprint iteration API)
   adoPat: string            — AES-256 encrypted
-  invitedClients: uid[]
+  pmMembers: uid[]          — PMs with full edit access to this project
+  invitedClients: uid[]     — clients with read-only portal access
   sow: {
     startDate, endDate
     totalHours, budgetHours
@@ -146,7 +157,7 @@ orgs/{orgId}/projects/{projectId}/adoCache/{id}
   fetchedAt                   — TTL: 15 minutes
 
 orgs/{orgId}/projects/{projectId}/statusSnapshots/{id}
-  date
+  date                        — meeting date (PM-entered)
   schedulePercent: number     — days elapsed / total days at snapshot time
   budgetConsumed: number      — hours logged (manually entered by PM)
   scopeComplete: string       — e.g. "159 / 231"
@@ -161,7 +172,7 @@ orgs/{orgId}/projects/{projectId}/statusSnapshots/{id}
 
 Read-only. All calls go through `/api/ado/[projectId]` which:
 1. Verifies the Firebase ID token
-2. Confirms the user's `orgId` owns the project
+2. Confirms the requesting user has access to the project (`admin`, or `uid` in `pmMembers`, or `uid` in `invitedClients`)
 3. Decrypts the PAT
 4. Calls the ADO REST API
 5. Writes the response to `adoCache` with `fetchedAt`
@@ -177,24 +188,38 @@ Read-only. All calls go through `/api/ado/[projectId]` which:
 | `sprint` | `/{project}/{team}/_apis/work/teamsettings/iterations?$timeframe=current` |
 | `devplan` | `/{project}/_apis/work/teamsettings/iterations` + story counts per iteration |
 
-**What PMs see:** All ADO data — full backlog, all iterations, story counts, epic progress.  
+**What PMs and admins see:** All ADO data — full backlog, all iterations, story counts, epic progress.  
 **What clients see:** Active sprint board (in-progress and done stories only) + development plan (iteration schedule and milestone dates). No raw backlog.
+
+---
+
+## Admin Workspace — Features
+
+Admin sees the full PM workspace for every project, plus:
+
+### Org Dashboard
+- All projects across the org with status badges, PM member count, client count, ADO connection indicator
+- Create new project
+- Archive project
+
+### Team Management
+- Invite PMs by email → creates `pm` user record → sends Firebase Auth invite
+- Assign/remove PMs from specific projects (the `pmMembers` array)
+- View which projects each PM is assigned to
 
 ---
 
 ## PM Workspace — Features
 
-After Google sign-in, a PM lands on their org's project list.
+After Google sign-in, a PM lands on a dashboard showing only their assigned projects.
 
-### Project List
-- All projects with status badge, ADO connection indicator, last-updated timestamp
-- Create new project
-- Archive project (soft delete, readable history preserved)
+### Project Dashboard
+- Assigned projects with status badge, ADO connection indicator, last-updated timestamp
 
 ### Project Workspace (tabbed)
 
 **Overview tab**  
-Editable project name, description, tech stack tags, PM tools. Client invite: enter email → creates `client` user record → sends Firebase Auth invite → client lands in portal for that project.
+Editable project name, description, tech stack tags, PM tools. Client invite: enter email → creates `client` user record → sends Firebase Auth invite → client lands in their portal for that project.
 
 **SOW tab**  
 Engagement summary, start/end dates, total hours, budget hours. Resource schedule table: add/edit/remove team members with role and hours.
@@ -212,13 +237,13 @@ Below the header: CRUD tables for:
 - **Need From Client** — stakeholder-attributed action items (resolved toggle)
 
 **Status Snapshots**  
-PM captures a snapshot before each status meeting. Saves current status header + metrics + notes + reference to the ADO cache at that moment. Builds a historical record of project state at each meeting. Snapshot list shows a timeline of all past meetings.
+PM captures a snapshot before each status meeting. Saves current status header + metrics + notes + reference to the ADO cache at that moment. Builds a historical timeline of project state across all meetings.
 
 **Context Files tab**  
 Upload any file type (PDF, DOCX, transcript, image). Per-file toggle: `Share with client`. File list shows name, uploader, upload date, shared status. Internal files are never visible in the client portal.
 
 **ADO Board tab**  
-Pulls from ADO cache: epics with story counts, active sprint stories in status columns (To Do / In Progress / Done), development plan showing iterations and dates. Manual refresh button. "Last synced" timestamp shown.
+Pulls from ADO cache: epics with story counts, active sprint stories in status columns (To Do / In Progress / Done). Manual refresh button. "Last synced" timestamp shown.
 
 **Development Plan tab**  
 Dedicated view of ADO iteration paths, capacity, and story breakdown. Clean table format suitable for presenting to clients.
@@ -248,8 +273,8 @@ If invited to multiple projects, client sees a simple project picker on login. O
 
 ### Status
 - Three metrics: schedule %, budget consumed, scope complete
-- "Need From Client" action items assigned to this client's stakeholders (unresolved only)
-- Risks and Issues that are open (severity-badged, description only — no internal owner detail)
+- "Need From Client" action items (unresolved only)
+- Open risks and issues (severity-badged, description only — no internal owner detail)
 
 ### Shared Documents
 - Only files where `sharedWithClient: true`
@@ -267,7 +292,7 @@ If invited to multiple projects, client sees a simple project picker on login. O
 
 ## Multi-Tenant Onboarding
 
-First Google sign-in with a new domain → prompted to create a new org or enter an org invite code. Org invite codes are generated by any PM in an existing org. Keeps v1 simple — no self-serve billing or plan management yet.
+First Google sign-in with a new email → prompted to create a new org or enter an org invite code. Creating an org sets the user as `admin`. Org invite codes (for PMs joining an existing org) are generated by the admin. Keeps v1 simple — no self-serve billing or plan management yet.
 
 ---
 
