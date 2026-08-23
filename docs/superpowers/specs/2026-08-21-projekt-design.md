@@ -1,4 +1,4 @@
-# Projekt — Design Spec
+# Orbital — Design Spec
 **Date:** 2026-08-21  
 **Revised:** 2026-08-23  
 **Author:** Bryce Leonard (FortyAU)  
@@ -8,9 +8,9 @@
 
 ## Overview
 
-Projekt is a dual-sided B2B SaaS application for agency project management. It gives agency team members a unified workspace to manage client engagements — combining uploaded context files, structured project data (SOW, risks, issues, stakeholders), and a read-only Azure DevOps integration — while exposing a curated, professional client portal for stakeholder-facing project visibility.
+Orbital is a dual-sided B2B SaaS application for agency project management. It gives agency team members a unified workspace to manage client engagements — combining uploaded context files, structured project data (SOW, risks, issues, stakeholders), and a read-only Azure DevOps integration — while exposing a curated, professional client portal for stakeholder-facing project visibility.
 
-Starting as an internal FortyAU tool, Projekt is architected as multi-tenant SaaS from day one so it can be sold to other agencies managing enterprise client accounts.
+Starting as an internal FortyAU tool, Orbital is architected as multi-tenant SaaS from day one so it can be sold to other agencies managing enterprise client accounts.
 
 ---
 
@@ -298,4 +298,4 @@ First Google sign-in → prompted to create a new org (becomes the org's foundin
 
 ## Future State Note
 
-All CRUD-managed data in Projekt (SOW, resources, status header, risks, issues, onboard items, stakeholders, roadmap, helpful links) maps directly to the 40AU status deck template. A v2 feature will auto-generate the status deck PDF/slide from a status snapshot — the data model is designed for this from day one.
+All CRUD-managed data in Orbital (SOW, resources, status header, risks, issues, onboard items, stakeholders, roadmap, helpful links) maps directly to the 40AU status deck template. A v2 feature will auto-generate the status deck PDF/slide from a status snapshot — the data model is designed for this from day one.
