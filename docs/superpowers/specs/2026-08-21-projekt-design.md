@@ -16,20 +16,22 @@ Starting as an internal FortyAU tool, Projekt is architected as multi-tenant Saa
 
 ## Users & Roles
 
-**Org Admin (`admin` role)**  
-The user who creates the org (typically the agency principal). Sees and manages all projects in the org. Can invite PMs and assign them to specific projects. Can invite clients to specific projects.
+Access is project-scoped, not org-scoped. Think Google Docs — a project has an owner, and the owner shares it with others at a specific access level. There is no org-level superuser.
 
-**PM (`pm` role)**  
-Agency team members. Full read/write access to projects they are assigned to. Cannot see projects they have not been added to. Manage context files, configure ADO connections, run CRUD on all project entities, invite clients to their projects.
+**Owner**  
+The user who created the project. Full control: edit all data, manage sharing, archive or delete the project. Sees all their owned projects plus any projects shared with them.
 
-**Client (`client` role)**  
-Client stakeholders. Read-only, curated view. See only projects they are explicitly invited to. Cannot see internal PM notes or raw backlog noise.
+**Editor**  
+A user the owner has added with edit access. Full read/write on project content (files, CRUD tables, ADO config, status). Cannot manage sharing or delete the project.
+
+**Viewer**  
+A user the owner has added with view access. Read-only, curated portal view — sees shared files, status, ADO board (filtered), helpful links. No access to internal PM data.
 
 **Org**  
-Each organization (e.g., FortyAU, a future agency customer) is a tenant. All data is scoped to an org. A user belongs to exactly one org.
+A lightweight namespace for multi-tenant isolation and future billing. Users belong to an org, and all projects live within an org. The org has no privileged owner — it is just a container.
 
-**Project membership example:**  
-Bryce (admin) has three projects. He adds Mike (pm) to two of them and Laurel (pm) to one. When Mike logs in he sees his two projects; Laurel sees her one. Bryce sees all three.
+**Example:**  
+Bryce creates three projects. He shares two with Mike as Editor and one with Laurel as Editor. A client stakeholder at Company ABC is added to one project as Viewer. When Mike logs in he sees his two projects; Laurel sees her one; the client sees their curated portal. Bryce sees all three because he owns them.
 
 ---
 
@@ -52,14 +54,14 @@ Firebase
 
 **Multi-tenancy:** Every Firestore document carries `orgId`. Security rules enforce org isolation at the database level — a compromised client SDK call cannot read another org's data.
 
-**Role enforcement:** Two layers. Firestore security rules check `role` on the user doc and project membership arrays. Next.js middleware gates route groups `(pm)` and `(client)` before any page renders.
+**Access enforcement:** Two layers. Firestore security rules check the `members` map on each project document. Next.js middleware gates route groups `(workspace)` and `(portal)` before any page renders.
 
 **Project-level access rules:**
-- `admin` — reads/writes all projects in their org
-- `pm` — reads/writes only projects where their `uid` appears in `pmMembers[]`
-- `client` — reads only projects where their `uid` appears in `invitedClients[]`
+- `owner` — full read/write, can manage sharing, archive, delete
+- `editor` — full read/write on project content, cannot manage sharing or delete
+- `viewer` — read-only curated portal view
 
-**ADO PAT security:** PATs are AES-256 encrypted before writing to Firestore. The encryption key lives in a Vercel environment variable, never in code. Decryption happens only inside `/api/ado` routes, after verifying the requesting user has access to that project. The decrypted PAT is never logged or returned to the client.
+**ADO PAT security:** PATs are AES-256 encrypted before writing to Firestore. The encryption key lives in a Vercel environment variable, never in code. Decryption happens only inside `/api/ado` routes, after verifying the requesting user is an `owner` or `editor` of that project. The decrypted PAT is never logged or returned to the client.
 
 **File security:** Storage paths are prefixed `/{orgId}/{projectId}/`. Rules enforce access via project membership. Downloads use short-lived signed URLs generated server-side — no file is publicly accessible by URL.
 
@@ -85,12 +87,10 @@ Firebase
 
 ```
 orgs/{orgId}
-  name, plan, createdAt, adminUid
+  name, plan, createdAt
 
 orgs/{orgId}/users/{uid}
-  email, displayName
-  role: "admin" | "pm" | "client"
-  createdAt
+  email, displayName, createdAt
 
 orgs/{orgId}/projects/{projectId}
   name, description
@@ -101,8 +101,9 @@ orgs/{orgId}/projects/{projectId}
   adoProject: string        — ADO project name
   adoTeam: string           — ADO team name (required for sprint iteration API)
   adoPat: string            — AES-256 encrypted
-  pmMembers: uid[]          — PMs with full edit access to this project
-  invitedClients: uid[]     — clients with read-only portal access
+  members: {                — map of uid → access level
+    [uid]: "owner" | "editor" | "viewer"
+  }
   sow: {
     startDate, endDate
     totalHours, budgetHours
@@ -172,7 +173,7 @@ orgs/{orgId}/projects/{projectId}/statusSnapshots/{id}
 
 Read-only. All calls go through `/api/ado/[projectId]` which:
 1. Verifies the Firebase ID token
-2. Confirms the requesting user has access to the project (`admin`, or `uid` in `pmMembers`, or `uid` in `invitedClients`)
+2. Confirms the requesting user's uid exists in `project.members` (any access level)
 3. Decrypts the PAT
 4. Calls the ADO REST API
 5. Writes the response to `adoCache` with `fetchedAt`
@@ -193,33 +194,20 @@ Read-only. All calls go through `/api/ado/[projectId]` which:
 
 ---
 
-## Admin Workspace — Features
+## Workspace — Features
 
-Admin sees the full PM workspace for every project, plus:
-
-### Org Dashboard
-- All projects across the org with status badges, PM member count, client count, ADO connection indicator
-- Create new project
-- Archive project
-
-### Team Management
-- Invite PMs by email → creates `pm` user record → sends Firebase Auth invite
-- Assign/remove PMs from specific projects (the `pmMembers` array)
-- View which projects each PM is assigned to
-
----
-
-## PM Workspace — Features
-
-After Google sign-in, a PM lands on a dashboard showing only their assigned projects.
+After Google sign-in, every user lands on a dashboard showing projects they own and projects shared with them. No separate admin surface — ownership is per-project, not org-wide.
 
 ### Project Dashboard
-- Assigned projects with status badge, ADO connection indicator, last-updated timestamp
+- All projects where `members[uid]` exists — owned and shared alike
+- Status badge, member count, ADO connection indicator, last-updated timestamp
+- Create new project (creator becomes `owner`)
+- Archive project (owner only)
 
 ### Project Workspace (tabbed)
 
 **Overview tab**  
-Editable project name, description, tech stack tags, PM tools. Client invite: enter email → creates `client` user record → sends Firebase Auth invite → client lands in their portal for that project.
+Editable project name, description, tech stack tags, PM tools (owner and editors). Sharing: owner enters any email and picks `editor` or `viewer` → creates user record → sends Firebase Auth invite. Editors land in the full workspace; viewers land in the client portal.
 
 **SOW tab**  
 Engagement summary, start/end dates, total hours, budget hours. Resource schedule table: add/edit/remove team members with role and hours.
@@ -292,7 +280,7 @@ If invited to multiple projects, client sees a simple project picker on login. O
 
 ## Multi-Tenant Onboarding
 
-First Google sign-in with a new email → prompted to create a new org or enter an org invite code. Creating an org sets the user as `admin`. Org invite codes (for PMs joining an existing org) are generated by the admin. Keeps v1 simple — no self-serve billing or plan management yet.
+First Google sign-in → prompted to create a new org (becomes the org's founding member) or enter an org invite code generated by an existing org member. No privileged org role is created — all org members are equal. Project ownership is the only source of elevated access, and it is per-project.
 
 ---
 
