@@ -721,17 +721,17 @@ git commit -m "feat: add Firestore security rules with org isolation and role-ba
 ### Task 5: Middleware (Route Group Gating)
 
 **Files:**
-- Create: `middleware.ts`
-- Create: `middleware.test.ts`
+- Create: `proxy.ts` (Next.js 16: renamed from `middleware.ts`; export `proxy` not `middleware`)
+- Create: `proxy.test.ts`
 
 **Interfaces:**
 - Consumes: `adminAuth` from `@/lib/firebase/admin`, `SESSION_COOKIE_NAME` env var
 - Produces: protected routing — unauthenticated requests to `/dashboard` or `/portal` redirect to `/login`
 
-- [ ] **Step 1: Write failing middleware tests**
+- [x] **Step 1: Write failing middleware tests**
 
 ```typescript
-// middleware.test.ts
+// proxy.test.ts
 import { vi, describe, test, expect } from 'vitest'
 import { NextRequest } from 'next/server'
 
@@ -758,7 +758,7 @@ function makeRequest(path: string, cookie?: string) {
 
 describe('middleware', () => {
   test('redirects unauthenticated user from /dashboard to /login', async () => {
-    const { middleware } = await import('./middleware')
+    const { proxy } = await import('./proxy')
     const res = await middleware(makeRequest('/dashboard'))
     expect(res.status).toBe(307)
     expect(res.headers.get('location')).toContain('/login')
@@ -785,14 +785,14 @@ describe('middleware', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
-npm test middleware.test.ts
+npm test proxy.test.ts
 ```
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Create `middleware.ts`**
+- [x] **Step 3: Create `proxy.ts`** (Next.js 16: file is `proxy.ts`, export is `proxy`)
 
 ```typescript
 import { NextRequest, NextResponse } from 'next/server'
@@ -806,7 +806,7 @@ function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname.startsWith(p))
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   if (isPublic(pathname)) return NextResponse.next()
@@ -834,18 +834,18 @@ export const config = {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
-npm test middleware.test.ts
+npm test proxy.test.ts
 ```
 Expected: 4 tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
-git add middleware.ts middleware.test.ts
-git commit -m "feat: add Next.js middleware to gate pm and client route groups"
+git add proxy.ts proxy.test.ts
+git commit -m "feat: add Next.js proxy to gate pm and client route groups"
 ```
 
 ---
