@@ -5,6 +5,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
 import type { Project, AccessLevel } from '@/lib/types'
+import { setUserOrg } from './users'
 
 type CreateData = Pick<Project, 'name' | 'description' | 'techStack' | 'pmTools'>
 
@@ -83,6 +84,7 @@ export async function addMember(
     [`members.${uid}`]: role,
     updatedAt: serverTimestamp(),
   })
+  await setUserOrg(uid, orgId)
 }
 
 export async function removeMember(
