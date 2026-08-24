@@ -867,7 +867,7 @@ git commit -m "feat: add Next.js proxy to gate pm and client route groups"
 - Consumes: `auth` from `@/lib/firebase/client`, `adminAuth` from `@/lib/firebase/admin`
 - Produces: httpOnly session cookie on sign-in; `useAuth(): { user: User | null, loading: boolean }`
 
-- [ ] **Step 1: Write failing component test**
+- [x] **Step 1: Write failing component test**
 
 ```typescript
 // components/auth/google-sign-in-button.test.tsx
@@ -907,14 +907,14 @@ test('calls signInWithPopup and posts token on click', async () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npm test components/auth/google-sign-in-button.test.tsx
 ```
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Create `components/auth/google-sign-in-button.tsx`**
+- [x] **Step 3: Create `components/auth/google-sign-in-button.tsx`**
 
 ```typescript
 'use client'
@@ -963,7 +963,7 @@ export function GoogleSignInButton() {
 }
 ```
 
-- [ ] **Step 4: Create `app/api/auth/session/route.ts`**
+- [x] **Step 4: Create `app/api/auth/session/route.ts`**
 
 ```typescript
 import { NextRequest, NextResponse } from 'next/server'
@@ -995,7 +995,7 @@ export async function POST(req: NextRequest) {
 }
 ```
 
-- [ ] **Step 5: Create `app/api/auth/signout/route.ts`**
+- [x] **Step 5: Create `app/api/auth/signout/route.ts`**
 
 ```typescript
 import { NextResponse } from 'next/server'
@@ -1009,7 +1009,7 @@ export async function POST() {
 }
 ```
 
-- [ ] **Step 6: Create `hooks/use-auth.ts`**
+- [x] **Step 6: Create `hooks/use-auth.ts`**
 
 ```typescript
 'use client'
@@ -1032,7 +1032,7 @@ export function useAuth() {
 }
 ```
 
-- [ ] **Step 7: Create `app/providers.tsx`**
+- [x] **Step 7: Create `app/providers.tsx`**
 
 ```typescript
 'use client'
@@ -1045,7 +1045,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 }
 ```
 
-- [ ] **Step 8: Create `app/layout.tsx`**
+- [x] **Step 8: Create `app/layout.tsx`**
 
 ```typescript
 import type { Metadata } from 'next'
@@ -1068,7 +1068,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-- [ ] **Step 9: Create `app/(auth)/layout.tsx`**
+- [x] **Step 9: Create `app/(auth)/layout.tsx`**
 
 ```typescript
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -1080,7 +1080,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-- [ ] **Step 10: Create `app/(auth)/login/page.tsx`**
+- [x] **Step 10: Create `app/(auth)/login/page.tsx`**
 
 ```typescript
 import { GoogleSignInButton } from '@/components/auth/google-sign-in-button'
@@ -1101,14 +1101,14 @@ export default function LoginPage() {
 }
 ```
 
-- [ ] **Step 11: Run tests to verify they pass**
+- [x] **Step 11: Run tests to verify they pass**
 
 ```bash
 npm test components/auth/google-sign-in-button.test.tsx
 ```
 Expected: 2 tests PASS.
 
-- [ ] **Step 12: Commit**
+- [x] **Step 12: Commit**
 
 ```bash
 git add app/ components/auth/ hooks/use-auth.ts
