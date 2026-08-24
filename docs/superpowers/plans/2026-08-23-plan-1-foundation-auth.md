@@ -1133,7 +1133,7 @@ git commit -m "feat: add Google sign-in, session cookie API routes, auth hook, a
   - `joinOrg(orgId: string, uid: string, email: string, displayName: string): Promise<void>`
   - `orgExists(orgId: string): Promise<boolean>`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```typescript
 // lib/firestore/orgs.test.ts
@@ -1207,14 +1207,14 @@ test('orgExists returns true when org has users', async () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npm test lib/firestore/orgs.test.ts
 ```
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Create `lib/firestore/orgs.ts`**
+- [x] **Step 3: Create `lib/firestore/orgs.ts`**
 
 ```typescript
 import {
@@ -1263,7 +1263,7 @@ export async function orgExists(orgId: string): Promise<boolean> {
 }
 ```
 
-- [ ] **Step 4: Create `app/onboarding/page.tsx`**
+- [x] **Step 4: Create `app/onboarding/page.tsx`**
 
 ```typescript
 'use client'
@@ -1372,7 +1372,7 @@ export default function OnboardingPage() {
 }
 ```
 
-- [ ] **Step 5: Create route group stub layouts**
+- [x] **Step 5: Create route group stub layouts**
 
 ```typescript
 // app/(pm)/layout.tsx
@@ -1388,21 +1388,21 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 }
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 ```bash
 npm test lib/firestore/orgs.test.ts
 ```
 Expected: 4 tests PASS.
 
-- [ ] **Step 7: Run full test suite**
+- [x] **Step 7: Run full test suite**
 
 ```bash
 npm test
 ```
-Expected: all tests PASS.
+Expected: all tests PASS. (Rules tests require Firebase emulator — skipped.)
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add lib/firestore/orgs.ts lib/firestore/orgs.test.ts app/onboarding/ app/(pm)/ app/(client)/
