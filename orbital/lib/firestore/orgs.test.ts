@@ -17,6 +17,7 @@ vi.mock('firebase/firestore', () => ({
   serverTimestamp: vi.fn(() => 'TIMESTAMP'),
 }))
 vi.mock('@/lib/firebase/client', () => ({ db: {} }))
+vi.mock('./users', () => ({ setUserOrg: vi.fn().mockResolvedValue(undefined) }))
 
 beforeEach(() => vi.clearAllMocks())
 

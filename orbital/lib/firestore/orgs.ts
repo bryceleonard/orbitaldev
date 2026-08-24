@@ -3,6 +3,7 @@ import {
   query, serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
+import { setUserOrg } from './users'
 
 export async function createOrg(
   name: string,
@@ -21,6 +22,7 @@ export async function createOrg(
     displayName,
     createdAt: serverTimestamp(),
   })
+  await setUserOrg(uid, orgRef.id)
   return orgRef.id
 }
 
@@ -36,6 +38,7 @@ export async function joinOrg(
     displayName,
     createdAt: serverTimestamp(),
   })
+  await setUserOrg(uid, orgId)
 }
 
 export async function orgExists(orgId: string): Promise<boolean> {
