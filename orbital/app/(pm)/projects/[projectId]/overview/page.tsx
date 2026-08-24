@@ -88,6 +88,80 @@ export default function OverviewPage() {
         onOpenChange={setShareOpen}
         onSuccess={() => qc.invalidateQueries({ queryKey: ['project', orgId, projectId] })}
       />
+
+      {isOwner && orgId && (
+        <AdoConfigSection orgId={orgId} projectId={projectId} project={project} />
+      )}
+    </div>
+  )
+}
+
+function AdoConfigSection({
+  orgId, projectId, project,
+}: {
+  orgId: string
+  projectId: string
+  project: import('@/lib/types').Project
+}) {
+  const [adoOrgUrl, setAdoOrgUrl] = useState(project.adoOrgUrl)
+  const [adoProject, setAdoProject] = useState(project.adoProject)
+  const [adoTeam, setAdoTeam] = useState(project.adoTeam)
+  const [pat, setPat] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+
+  async function handleSave() {
+    setSaving(true)
+    setError(null)
+    setSaved(false)
+    try {
+      const res = await fetch(`/api/ado/configure/${projectId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adoOrgUrl, adoProject, adoTeam, pat, orgId }),
+      })
+      if (!res.ok) throw new Error((await res.json()).error)
+      setSaved(true)
+      setPat('')
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="border rounded-md p-4 flex flex-col gap-3">
+      <h2 className="font-medium">ADO Connection</h2>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label>ADO Org URL</Label>
+          <Input value={adoOrgUrl} onChange={(e) => setAdoOrgUrl(e.target.value)} placeholder="https://dev.azure.com/myorg" />
+        </div>
+        <div>
+          <Label>ADO Project</Label>
+          <Input value={adoProject} onChange={(e) => setAdoProject(e.target.value)} placeholder="MyProject" />
+        </div>
+        <div>
+          <Label>ADO Team</Label>
+          <Input value={adoTeam} onChange={(e) => setAdoTeam(e.target.value)} placeholder="MyTeam" />
+        </div>
+        <div>
+          <Label>Personal Access Token</Label>
+          <Input
+            type="password"
+            value={pat}
+            onChange={(e) => setPat(e.target.value)}
+            placeholder={project.adoPat ? '••••••• (set — enter new to replace)' : 'Enter PAT'}
+          />
+        </div>
+      </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      {saved && <p className="text-sm text-green-600">ADO settings saved.</p>}
+      <Button onClick={handleSave} disabled={saving} className="self-start">
+        {saving ? 'Saving…' : 'Save ADO settings'}
+      </Button>
     </div>
   )
 }
