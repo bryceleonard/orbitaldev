@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
 import { listFiles, updateFileShared, deleteFile } from '@/lib/firestore/files'
+import { FileUploadButton } from '@/components/files/file-upload-button'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Trash2 } from 'lucide-react'
@@ -44,8 +45,8 @@ export default function FilesPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold">Context Files</h2>
-        {canEdit && (
-          <Button disabled title="Upload wired in Plan 4">Upload file</Button>
+        {canEdit && orgId && (
+          <FileUploadButton orgId={orgId} projectId={projectId} onUploaded={inv} />
         )}
       </div>
 
