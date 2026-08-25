@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
-import { useOrgId } from '@/hooks/use-org'
+import { useOrgIdWithStatus } from '@/hooks/use-org'
 import { createProject } from '@/lib/firestore/projects'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 
 export function ProjectForm() {
   const { user } = useAuth()
-  const orgId = useOrgId()
+  const { orgId, isLoading: orgLoading } = useOrgIdWithStatus()
   const router = useRouter()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -19,7 +19,11 @@ export function ProjectForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!user || !orgId || !name.trim()) return
+    if (!user || !name.trim()) return
+    if (!orgId) {
+      setError('No workspace found. Please complete onboarding first.')
+      return
+    }
     setLoading(true)
     setError(null)
     try {
@@ -30,7 +34,8 @@ export function ProjectForm() {
         pmTools: [],
       })
       router.push(`/projects/${projectId}/overview`)
-    } catch {
+    } catch (err) {
+      console.error('[createProject] orgId:', orgId, 'uid:', user.uid, 'error:', err)
       setError('Failed to create project.')
     } finally {
       setLoading(false)
@@ -48,7 +53,7 @@ export function ProjectForm() {
         <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={loading || !name.trim()}>
+      <Button type="submit" disabled={loading || orgLoading || !name.trim()}>
         {loading ? 'Creating…' : 'Create project'}
       </Button>
     </form>

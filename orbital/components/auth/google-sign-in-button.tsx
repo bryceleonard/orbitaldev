@@ -25,8 +25,10 @@ export function GoogleSignInButton() {
       })
 
       if (!res.ok) throw new Error('Session creation failed')
+
       router.replace('/dashboard')
-    } catch {
+    } catch (err) {
+      console.error('[GoogleSignIn] error:', err)
       setError('Sign-in failed. Please try again.')
     } finally {
       setLoading(false)

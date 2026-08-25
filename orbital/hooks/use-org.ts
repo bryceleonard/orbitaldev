@@ -13,3 +13,14 @@ export function useOrgId(): string | undefined {
   })
   return data ?? undefined
 }
+
+export function useOrgIdWithStatus(): { orgId: string | undefined; isLoading: boolean } {
+  const { user } = useAuth()
+  const { data, isLoading } = useQuery({
+    queryKey: ['orgId', user?.uid],
+    queryFn: () => getUserOrgId(user!.uid),
+    enabled: !!user,
+    staleTime: Infinity,
+  })
+  return { orgId: data ?? undefined, isLoading: isLoading || !user }
+}

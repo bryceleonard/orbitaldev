@@ -21,7 +21,7 @@ export function ProjectCard({ project }: Props) {
         </CardHeader>
         <CardContent>
           <p className="text-xs text-muted-foreground">
-            {memberCount} member{memberCount !== 1 ? 's' : ''} · Updated {project.updatedAt?.slice(0, 10) ?? '—'}
+            {memberCount} member{memberCount !== 1 ? 's' : ''} · Updated {project.updatedAt ? (typeof project.updatedAt === 'string' ? project.updatedAt : (project.updatedAt as any).toDate().toISOString()).slice(0, 10) : '—'}
           </p>
         </CardContent>
       </Card>

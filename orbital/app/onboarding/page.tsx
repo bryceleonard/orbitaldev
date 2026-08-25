@@ -17,6 +17,11 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  async function handleSignOut() {
+    await fetch('/api/auth/signout', { method: 'POST' })
+    router.replace('/login')
+  }
+
   async function handleCreate() {
     if (!user || !orgName.trim()) return
     setLoading(true)
@@ -24,7 +29,8 @@ export default function OnboardingPage() {
     try {
       await createOrg(orgName.trim(), user.uid, user.email!, user.displayName ?? user.email!)
       router.replace('/dashboard')
-    } catch {
+    } catch (err) {
+      console.error('[createOrg] error:', err)
       setError('Failed to create org. Please try again.')
     } finally {
       setLoading(false)
@@ -51,8 +57,15 @@ export default function OnboardingPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted/40">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Welcome to Orbital</CardTitle>
-          <CardDescription>Set up your workspace to get started.</CardDescription>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle>Welcome to Orbital</CardTitle>
+              <CardDescription>Set up your workspace to get started.</CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground">
+              Sign out
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {!mode && (

@@ -47,7 +47,7 @@ export default function StatusPage() {
   const schedule = schedulePercent(project.sow)
 
   async function setStatus(field: 'scheduleStatus' | 'budgetStatus' | 'scopeStatus', value: StatusLevel) {
-    if (!orgId) return
+    if (!orgId || !project) return
     await updateProject(orgId, projectId, {
       statusHeader: { ...project.statusHeader, [field]: value },
     })

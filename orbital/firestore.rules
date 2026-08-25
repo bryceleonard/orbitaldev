@@ -6,16 +6,15 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isMember(orgId, projectId) {
+    function isOrgMember(orgId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/orgs/$(orgId)/users/$(request.auth.uid));
+    }
+
+    function isProjectMember(orgId, projectId) {
       return isSignedIn() &&
         get(/databases/$(database)/documents/orgs/$(orgId)/projects/$(projectId))
           .data.members[request.auth.uid] != null;
-    }
-
-    function hasRole(orgId, projectId, role) {
-      return isSignedIn() &&
-        get(/databases/$(database)/documents/orgs/$(orgId)/projects/$(projectId))
-          .data.members[request.auth.uid] == role;
     }
 
     function isOwnerOrEditor(orgId, projectId) {
@@ -24,9 +23,10 @@ service cloud.firestore {
       return isSignedIn() && (role == 'owner' || role == 'editor');
     }
 
-    function isOrgMember(orgId) {
+    function hasRole(orgId, projectId, role) {
       return isSignedIn() &&
-        exists(/databases/$(database)/documents/orgs/$(orgId)/users/$(request.auth.uid));
+        get(/databases/$(database)/documents/orgs/$(orgId)/projects/$(projectId))
+          .data.members[request.auth.uid] == role;
     }
 
     match /users/{uid} {
@@ -45,7 +45,8 @@ service cloud.firestore {
       }
 
       match /projects/{projectId} {
-        allow read: if isMember(orgId, projectId);
+        // Use resource.data for reads so list queries work correctly
+        allow read: if isSignedIn() && resource.data.members[request.auth.uid] != null;
         allow create: if isOrgMember(orgId) &&
                          request.resource.data.orgId == orgId;
         allow update: if isOwnerOrEditor(orgId, projectId) &&
@@ -53,7 +54,7 @@ service cloud.firestore {
         allow delete: if hasRole(orgId, projectId, 'owner');
 
         match /{subcollection}/{docId} {
-          allow read: if isMember(orgId, projectId);
+          allow read: if isProjectMember(orgId, projectId);
           allow create, update: if isOwnerOrEditor(orgId, projectId);
           allow delete: if isOwnerOrEditor(orgId, projectId);
         }
