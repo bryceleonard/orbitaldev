@@ -2,6 +2,35 @@ export type AccessLevel = 'owner' | 'editor' | 'viewer'
 export type StatusLevel = 'on_track' | 'at_risk' | 'off_track'
 export type Severity = 'low' | 'medium' | 'high'
 export type OpenResolved = 'open' | 'resolved'
+export type TrackerType = 'ado' | 'beads'
+
+export interface TrackerBoard {
+  id: string
+  label: string
+  type: TrackerType
+  adoOrgUrl: string
+  adoProject: string
+  adoPat: string        // AES-256-GCM encrypted at rest
+  adoTeam: string       // ADO Work Items only; ignored for Beads
+  beadsRepo: string     // Beads only: ADO repo name containing .beads/
+  beadsBranch: string   // Beads only: defaults to 'main'
+}
+
+export interface BeadsIssue {
+  id: string
+  title: string
+  type: 'bug' | 'feature' | 'task' | string
+  priority: 0 | 1 | 2 | 3 | 4
+  status: 'open' | 'in_progress' | 'in_review' | 'rework' | 'closed' | 'deferred' | string
+  assignee: string
+  labels: string[]
+  description: string
+  dependencies: string[]
+  acceptance_criteria: string
+  parentId?: string     // set when issue is a child of an epic
+  created_at: string
+  updated_at: string
+}
 
 export interface Org {
   id: string
@@ -39,10 +68,7 @@ export interface Project {
   techStack: string[]
   pmTools: string[]
   status: 'active' | 'archived'
-  adoOrgUrl: string
-  adoProject: string
-  adoTeam: string
-  adoPat: string          // AES-256-GCM encrypted at rest
+  trackerBoards: TrackerBoard[]
   members: Record<string, AccessLevel>
   sow: Sow
   statusHeader: StatusHeader
@@ -130,7 +156,8 @@ export interface RoadmapItem {
 
 export interface AdoCache {
   id: string
-  type: 'backlog' | 'sprint' | 'devplan'
+  boardId: string       // which TrackerBoard this cache entry belongs to
+  type: 'backlog' | 'sprint' | 'devplan' | 'beads-issues'
   payload: Record<string, unknown>
   fetchedAt: string
 }
