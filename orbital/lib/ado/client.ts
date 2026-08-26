@@ -71,3 +71,30 @@ export async function fetchDevPlan(
     `?api-version=${API_VERSION}`
   return adoGet(url, pat)
 }
+
+async function adoGetText(url: string, pat: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: {
+      Authorization: authHeader(pat),
+    },
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`ADO request failed: ${res.status} ${text}`)
+  }
+  return res.text()
+}
+
+export async function fetchBeadsIssues(
+  adoOrgUrl: string,
+  adoProject: string,
+  repo: string,
+  branch: string,
+  pat: string,
+): Promise<string> {
+  const path = encodeURIComponent('.beads/issues.jsonl')
+  const url =
+    `${adoOrgUrl}/${adoProject}/_apis/git/repositories/${repo}/items` +
+    `?path=${path}&versionDescriptor.version=${branch}&download=true&api-version=${API_VERSION}`
+  return adoGetText(url, pat)
+}

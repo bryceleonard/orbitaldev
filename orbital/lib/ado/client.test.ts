@@ -1,9 +1,9 @@
-import { vi, test, expect, beforeEach } from 'vitest'
+import { vi, describe, test, expect, beforeEach } from 'vitest'
 
 const mockFetch = vi.fn()
-global.fetch = mockFetch
+vi.stubGlobal('fetch', mockFetch)
 
-beforeEach(() => vi.clearAllMocks())
+beforeEach(() => mockFetch.mockReset())
 
 function adoOk(body: unknown) {
   return Promise.resolve({ ok: true, json: () => Promise.resolve(body) })
@@ -46,4 +46,31 @@ test('throws on non-ok ADO response', async () => {
   mockFetch.mockReturnValue(Promise.resolve({ ok: false, status: 401, text: () => Promise.resolve('Unauthorized') }))
   const { fetchBacklog } = await import('./client')
   await expect(fetchBacklog('https://dev.azure.com/myorg', 'MyProject', 'bad-pat')).rejects.toThrow('ADO request failed')
+})
+
+describe('fetchBeadsIssues', () => {
+  test('calls ADO Git Items endpoint and returns text', async () => {
+    const jsonl = '{"id":"br-1","title":"Fix it"}\n{"id":"br-2","title":"Add it"}'
+    mockFetch.mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve(jsonl),
+    })
+    const { fetchBeadsIssues } = await import('./client')
+    const result = await fetchBeadsIssues(
+      'https://dev.azure.com/myorg', 'MyProject', 'MyRepo', 'main', 'myPat',
+    )
+    expect(result).toBe(jsonl)
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://dev.azure.com/myorg/MyProject/_apis/git/repositories/MyRepo/items?path=.beads%2Fissues.jsonl&versionDescriptor.version=main&download=true&api-version=7.1',
+      expect.objectContaining({ headers: expect.objectContaining({ Authorization: expect.stringContaining('Basic') }) }),
+    )
+  })
+
+  test('throws on non-ok response', async () => {
+    mockFetch.mockResolvedValue({ ok: false, status: 404, text: () => Promise.resolve('Not found') })
+    const { fetchBeadsIssues } = await import('./client')
+    await expect(
+      fetchBeadsIssues('https://dev.azure.com/myorg', 'MyProject', 'MyRepo', 'main', 'pat'),
+    ).rejects.toThrow('ADO request failed: 404')
+  })
 })
