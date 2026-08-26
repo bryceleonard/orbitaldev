@@ -13,7 +13,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
     <div className="flex flex-col h-full">
       <div className="border-b px-8 pt-6 pb-0">
         <h1 className="text-xl font-semibold mb-4">{project?.name ?? '—'}</h1>
-        <ProjectTabs projectId={projectId} />
+        <ProjectTabs projectId={projectId} trackerBoards={project?.trackerBoards ?? []} />
       </div>
       <div className="flex-1 overflow-y-auto p-8">{children}</div>
     </div>
