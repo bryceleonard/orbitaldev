@@ -1,7 +1,7 @@
 'use client'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
 import { getLatestBoardCache } from '@/lib/firestore/ado-cache'
@@ -139,9 +139,8 @@ function PortalBeadsView({ projectId, boardId, orgId }: { projectId: string; boa
               const closed = children.filter((i) => i.status === 'closed').length
               const expanded = expandedEpics.has(epic.id)
               return (
-                <>
+                <Fragment key={epic.id}>
                   <tr
-                    key={epic.id}
                     className="border-t bg-muted/20 cursor-pointer hover:bg-muted/40"
                     onClick={() => setExpandedEpics((prev) => { const n = new Set(prev); n.has(epic.id) ? n.delete(epic.id) : n.add(epic.id); return n })}
                   >
@@ -162,7 +161,7 @@ function PortalBeadsView({ projectId, boardId, orgId }: { projectId: string; boa
                       <td className="p-2"><Badge variant="outline">{child.status}</Badge></td>
                     </tr>
                   ))}
-                </>
+                </Fragment>
               )
             })}
             {orphans.map((issue) => (

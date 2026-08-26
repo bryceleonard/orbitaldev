@@ -1,7 +1,7 @@
 'use client'
 import { useParams } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
 import { getLatestBoardCache } from '@/lib/firestore/ado-cache'
@@ -253,9 +253,8 @@ function BeadsBoardView({ projectId, boardId, orgId }: { projectId: string; boar
                 const closedCount = children.filter((i) => i.status === 'closed').length
                 const expanded = expandedEpics.has(epic.id)
                 return (
-                  <>
+                  <Fragment key={epic.id}>
                     <tr
-                      key={epic.id}
                       className="border-t bg-muted/20 cursor-pointer hover:bg-muted/40"
                       onClick={() => {
                         setExpandedEpics((prev) => {
@@ -290,7 +289,7 @@ function BeadsBoardView({ projectId, boardId, orgId }: { projectId: string; boar
                         <td className="p-2 text-muted-foreground">{child.assignee || '—'}</td>
                       </tr>
                     ))}
-                  </>
+                  </Fragment>
                 )
               })}
               {orphans.map((issue) => (
