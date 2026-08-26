@@ -13,7 +13,7 @@ export default function PortalProjectLayout({ children }: { children: React.Reac
     <div className="flex flex-col">
       <div className="border-b px-8 pt-6 pb-0">
         <h1 className="text-xl font-semibold mb-4">{project?.name ?? '—'}</h1>
-        <PortalProjectTabs projectId={projectId} />
+        <PortalProjectTabs projectId={projectId} trackerBoards={project?.trackerBoards ?? []} />
       </div>
       <div className="p-8">{children}</div>
     </div>
