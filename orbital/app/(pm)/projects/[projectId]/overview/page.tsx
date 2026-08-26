@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import type { TrackerBoard, TrackerType } from '@/lib/types'
 
 export default function OverviewPage() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -90,40 +91,74 @@ export default function OverviewPage() {
       />
 
       {isOwner && orgId && (
-        <AdoConfigSection orgId={orgId} projectId={projectId} project={project} />
+        <BoardsCard
+          orgId={orgId}
+          projectId={projectId}
+          boards={project.trackerBoards}
+          onSaved={() => qc.invalidateQueries({ queryKey: ['project', orgId, projectId] })}
+        />
       )}
     </div>
   )
 }
 
-function AdoConfigSection({
-  orgId, projectId, project,
+function emptyBoard(type: TrackerType): Omit<TrackerBoard, 'id'> {
+  return {
+    label: '',
+    type,
+    adoOrgUrl: '',
+    adoProject: '',
+    adoPat: '',
+    adoTeam: '',
+    beadsRepo: '',
+    beadsBranch: 'main',
+  }
+}
+
+function BoardsCard({
+  orgId, projectId, boards, onSaved,
 }: {
   orgId: string
   projectId: string
-  project: import('@/lib/types').Project
+  boards: TrackerBoard[]
+  onSaved: () => void
 }) {
-  const [adoOrgUrl, setAdoOrgUrl] = useState(project.adoOrgUrl)
-  const [adoProject, setAdoProject] = useState(project.adoProject)
-  const [adoTeam, setAdoTeam] = useState(project.adoTeam)
+  const [editingBoard, setEditingBoard] = useState<TrackerBoard | null>(null)
+  const [adding, setAdding] = useState(false)
+  const [newType, setNewType] = useState<TrackerType>('ado')
   const [pat, setPat] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
+
+  const draftBoard: TrackerBoard = editingBoard ?? {
+    id: crypto.randomUUID(),
+    ...emptyBoard(newType),
+  }
+
+  function updateDraft(patch: Partial<TrackerBoard>) {
+    setEditingBoard((prev) => prev ? { ...prev, ...patch } : { ...draftBoard, ...patch })
+  }
 
   async function handleSave() {
+    const board = editingBoard ?? { id: crypto.randomUUID(), ...emptyBoard(newType) }
     setSaving(true)
     setError(null)
-    setSaved(false)
     try {
-      const res = await fetch(`/api/ado/configure/${projectId}`, {
+      const res = await fetch(`/api/boards/configure/${projectId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adoOrgUrl, adoProject, adoTeam, pat, orgId }),
+        body: JSON.stringify({
+          action: boards.find((b) => b.id === board.id) ? 'edit' : 'add',
+          board,
+          orgId,
+          ...(pat.trim() ? { pat: pat.trim() } : {}),
+        }),
       })
       if (!res.ok) throw new Error((await res.json()).error)
-      setSaved(true)
       setPat('')
+      setAdding(false)
+      setEditingBoard(null)
+      onSaved()
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -131,37 +166,153 @@ function AdoConfigSection({
     }
   }
 
+  async function handleRemove(boardId: string) {
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/boards/configure/${projectId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'remove', boardId, orgId }),
+      })
+      if (!res.ok) throw new Error((await res.json()).error)
+      onSaved()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const activeBoard = editingBoard ?? (adding ? { id: crypto.randomUUID(), ...emptyBoard(newType) } : null)
+
   return (
-    <div className="border rounded-md p-4 flex flex-col gap-3">
-      <h2 className="font-medium">ADO Connection</h2>
+    <div className="border rounded-md p-4 flex flex-col gap-4">
+      <h2 className="font-medium">Boards</h2>
+      {boards.length === 0 && !adding && (
+        <p className="text-sm text-muted-foreground">No boards configured.</p>
+      )}
+      {boards.map((b) => (
+        <div key={b.id} className="flex items-center justify-between text-sm border rounded px-3 py-2">
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{b.label}</span>
+            <Badge variant="outline">{b.type === 'ado' ? 'ADO Work Items' : 'Beads'}</Badge>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={() => { setEditingBoard(b); setAdding(false) }}>Edit</Button>
+            <Button variant="ghost" size="sm" onClick={() => handleRemove(b.id)} disabled={saving}>Remove</Button>
+          </div>
+        </div>
+      ))}
+
+      {activeBoard && (
+        <BoardForm
+          board={activeBoard}
+          pat={pat}
+          onPat={setPat}
+          onChange={updateDraft}
+          onNewTypeChange={setNewType}
+          newType={newType}
+          isNew={!editingBoard}
+        />
+      )}
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      <div className="flex gap-2">
+        {!adding && !editingBoard && (
+          <Button variant="outline" size="sm" onClick={() => { setAdding(true); setEditingBoard(null) }}>
+            Add board
+          </Button>
+        )}
+        {(adding || editingBoard) && (
+          <>
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving…' : 'Save board'}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => { setAdding(false); setEditingBoard(null); setPat('') }}>
+              Cancel
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function BoardForm({
+  board, pat, onPat, onChange, onNewTypeChange, newType, isNew,
+}: {
+  board: TrackerBoard
+  pat: string
+  onPat: (v: string) => void
+  onChange: (patch: Partial<TrackerBoard>) => void
+  onNewTypeChange: (t: TrackerType) => void
+  newType: TrackerType
+  isNew: boolean
+}) {
+  return (
+    <div className="border rounded-md p-3 flex flex-col gap-3 bg-muted/20">
       <div className="grid grid-cols-2 gap-3">
         <div>
+          <Label>Label</Label>
+          <Input value={board.label} onChange={(e) => onChange({ label: e.target.value })} placeholder="e.g. Alpha, Backend" />
+        </div>
+        <div>
+          <Label>Type</Label>
+          {isNew ? (
+            <select
+              className="w-full border rounded px-2 py-1.5 text-sm"
+              value={newType}
+              onChange={(e) => {
+                const t = e.target.value as TrackerType
+                onNewTypeChange(t)
+                onChange({ type: t })
+              }}
+            >
+              <option value="ado">ADO Work Items</option>
+              <option value="beads">Beads</option>
+            </select>
+          ) : (
+            <Input value={board.type === 'ado' ? 'ADO Work Items' : 'Beads'} disabled />
+          )}
+        </div>
+        <div>
           <Label>ADO Org URL</Label>
-          <Input value={adoOrgUrl} onChange={(e) => setAdoOrgUrl(e.target.value)} placeholder="https://dev.azure.com/myorg" />
+          <Input value={board.adoOrgUrl} onChange={(e) => onChange({ adoOrgUrl: e.target.value })} placeholder="https://dev.azure.com/myorg" />
         </div>
         <div>
           <Label>ADO Project</Label>
-          <Input value={adoProject} onChange={(e) => setAdoProject(e.target.value)} placeholder="MyProject" />
-        </div>
-        <div>
-          <Label>ADO Team</Label>
-          <Input value={adoTeam} onChange={(e) => setAdoTeam(e.target.value)} placeholder="MyTeam" />
+          <Input value={board.adoProject} onChange={(e) => onChange({ adoProject: e.target.value })} placeholder="MyProject" />
         </div>
         <div>
           <Label>Personal Access Token</Label>
           <Input
             type="password"
             value={pat}
-            onChange={(e) => setPat(e.target.value)}
-            placeholder={project.adoPat ? '••••••• (set — enter new to replace)' : 'Enter PAT'}
+            onChange={(e) => onPat(e.target.value)}
+            placeholder={board.adoPat ? '••••• (set — enter new to replace)' : 'Enter PAT'}
           />
         </div>
+        {board.type === 'ado' && (
+          <div>
+            <Label>ADO Team</Label>
+            <Input value={board.adoTeam} onChange={(e) => onChange({ adoTeam: e.target.value })} placeholder="MyTeam" />
+          </div>
+        )}
+        {board.type === 'beads' && (
+          <>
+            <div>
+              <Label>Repo name</Label>
+              <Input value={board.beadsRepo} onChange={(e) => onChange({ beadsRepo: e.target.value })} placeholder="MyRepo" />
+            </div>
+            <div>
+              <Label>Branch</Label>
+              <Input value={board.beadsBranch} onChange={(e) => onChange({ beadsBranch: e.target.value })} placeholder="main" />
+            </div>
+          </>
+        )}
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      {saved && <p className="text-sm text-green-600">ADO settings saved.</p>}
-      <Button onClick={handleSave} disabled={saving} className="self-start">
-        {saving ? 'Saving…' : 'Save ADO settings'}
-      </Button>
     </div>
   )
 }
