@@ -4,7 +4,7 @@ import {
   deleteField, serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
-import type { Project, AccessLevel } from '@/lib/types'
+import type { Project, AccessLevel, TrackerBoard } from '@/lib/types'
 import { setUserOrg } from './users'
 
 type CreateData = Pick<Project, 'name' | 'description' | 'techStack' | 'pmTools'>
@@ -17,15 +17,13 @@ export async function createProject(
   orgId: string,
   uid: string,
   data: CreateData,
+  firstBoard?: TrackerBoard,
 ): Promise<string> {
   const ref = await addDoc(projectPath(orgId), {
     ...data,
     orgId,
     status: 'active',
-    adoOrgUrl: '',
-    adoProject: '',
-    adoTeam: '',
-    adoPat: '',
+    trackerBoards: firstBoard ? [firstBoard] : [],
     members: { [uid]: 'owner' },
     sow: { startDate: '', endDate: '', totalHours: 0, budgetHours: 0, summary: '' },
     statusHeader: {

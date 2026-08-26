@@ -14,3 +14,16 @@ export async function getLatestCache(
     .sort((a, b) => (a.fetchedAt > b.fetchedAt ? -1 : 1))
   return matches[0] ?? null
 }
+
+export async function getLatestBoardCache(
+  orgId: string,
+  projectId: string,
+  boardId: string,
+  type: AdoCache['type'],
+): Promise<AdoCache | null> {
+  const all = await listItems<AdoCache>(path(orgId, projectId))
+  const matches = all
+    .filter((c) => c.type === type && c.boardId === boardId)
+    .sort((a, b) => (a.fetchedAt > b.fetchedAt ? -1 : 1))
+  return matches[0] ?? null
+}

@@ -70,3 +70,32 @@ test('getProject returns null when doc does not exist', async () => {
   const result = await getProject('org1', 'no-such')
   expect(result).toBeNull()
 })
+
+test('createProject stores empty trackerBoards when no firstBoard given', async () => {
+  mockAddDoc.mockResolvedValue({ id: 'proj-2' })
+  mockCollection.mockReturnValue('col-ref')
+  const { createProject } = await import('./projects')
+  await createProject('org1', 'uid-owner', {
+    name: 'Test', description: '', techStack: [], pmTools: [],
+  })
+  expect(mockAddDoc).toHaveBeenCalledWith('col-ref', expect.objectContaining({
+    trackerBoards: [],
+  }))
+})
+
+test('createProject stores firstBoard in trackerBoards', async () => {
+  mockAddDoc.mockResolvedValue({ id: 'proj-3' })
+  mockCollection.mockReturnValue('col-ref')
+  const { createProject } = await import('./projects')
+  const board = {
+    id: 'b1', label: 'Alpha', type: 'ado' as const,
+    adoOrgUrl: '', adoProject: '', adoPat: '',
+    adoTeam: '', beadsRepo: '', beadsBranch: 'main',
+  }
+  await createProject('org1', 'uid-owner', {
+    name: 'Test', description: '', techStack: [], pmTools: [],
+  }, board)
+  expect(mockAddDoc).toHaveBeenCalledWith('col-ref', expect.objectContaining({
+    trackerBoards: [board],
+  }))
+})
