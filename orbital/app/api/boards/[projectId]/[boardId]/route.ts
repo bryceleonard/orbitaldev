@@ -72,10 +72,12 @@ function parseBeadsJsonl(text: string): BeadsIssue[] {
     .filter(Boolean)
     .map((line) => {
       const raw = JSON.parse(line) as Record<string, unknown>
+      const parentId = (raw['parent_id'] ?? raw['parentId']) as string | undefined
+      const { parent_id: _drop, ...rest } = raw as Record<string, unknown> & { parent_id?: unknown }
+      void _drop
       return {
-        ...raw,
-        // Normalise parent field — Beads CLI uses snake_case; verify against real repo
-        parentId: (raw['parent_id'] ?? raw['parentId'] ?? undefined) as string | undefined,
+        ...rest,
+        ...(parentId !== undefined && { parentId }),
         labels: Array.isArray(raw['labels']) ? raw['labels'] as string[] : [],
         dependencies: Array.isArray(raw['dependencies']) ? raw['dependencies'] as string[] : [],
       } as BeadsIssue
