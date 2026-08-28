@@ -41,7 +41,7 @@ export function BeadsKanban({
     grouped.get(s)!.push(issue)
   }
   const orderedKeys = [
-    ...COLUMN_ORDER.filter((k) => grouped.has(k)),
+    ...COLUMN_ORDER,
     ...[...grouped.keys()].filter((k) => !COLUMN_ORDER.includes(k)),
   ]
 
@@ -64,9 +64,6 @@ export function BeadsKanban({
 
       {/* columns */}
       <div className="flex gap-3 overflow-x-auto pb-4">
-        {orderedKeys.length === 0 && (
-          <p className="text-muted-foreground text-sm">No issues.</p>
-        )}
         {orderedKeys.map((status) => {
           const col = grouped.get(status) ?? []
           const label = COLUMN_LABELS[status] ?? statusLabel(status)
