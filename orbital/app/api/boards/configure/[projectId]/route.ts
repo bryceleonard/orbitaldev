@@ -2,7 +2,6 @@ export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
-import { encryptPat } from '@/lib/ado/encryption'
 import type { TrackerBoard } from '@/lib/types'
 
 const COOKIE = process.env.SESSION_COOKIE_NAME ?? '__session'
@@ -31,10 +30,9 @@ export async function POST(
     board?: Omit<TrackerBoard, 'adoPat'>
     boardId?: string
     orgId: string
-    pat?: string
   }
 
-  const { action, board, boardId, orgId, pat } = body
+  const { action, board, boardId, orgId } = body
   if (!orgId) return NextResponse.json({ error: 'orgId required' }, { status: 400 })
 
   const projRef = adminDb.doc(`orgs/${orgId}/projects/${projectId}`)
@@ -50,11 +48,7 @@ export async function POST(
   if (action === 'add' || action === 'edit') {
     if (!board) return NextResponse.json({ error: 'board required' }, { status: 400 })
 
-    const encryptedPat = pat && pat.trim()
-      ? encryptPat(pat.trim())
-      : boards.find((b) => b.id === board.id)?.adoPat ?? ''
-
-    const fullBoard: TrackerBoard = { ...board, adoPat: encryptedPat }
+    const fullBoard: TrackerBoard = { ...board }
 
     const updated =
       action === 'add'

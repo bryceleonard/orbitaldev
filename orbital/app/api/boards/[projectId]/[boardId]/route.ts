@@ -2,7 +2,6 @@ export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
-import { decryptPat } from '@/lib/ado/encryption'
 import { fetchBacklog, fetchSprint, fetchDevPlan, fetchBeadsIssues } from '@/lib/ado/client'
 import type { TrackerBoard, BeadsIssue } from '@/lib/types'
 
@@ -119,12 +118,8 @@ export async function GET(
     }
   }
 
-  let pat: string
-  try {
-    pat = decryptPat(board.adoPat)
-  } catch {
-    return NextResponse.json({ error: 'PAT decryption failed — reconfigure board settings' }, { status: 500 })
-  }
+  const pat = process.env.ADO_PAT
+  if (!pat) return NextResponse.json({ error: 'ADO_PAT environment variable is not configured' }, { status: 500 })
 
   try {
     if (board.type === 'beads') {

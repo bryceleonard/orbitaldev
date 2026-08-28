@@ -108,7 +108,6 @@ function emptyBoard(type: TrackerType): Omit<TrackerBoard, 'id'> {
     type,
     adoOrgUrl: '',
     adoProject: '',
-    adoPat: '',
     adoTeam: '',
     beadsRepo: '',
     beadsBranch: 'main',
@@ -126,7 +125,6 @@ function BoardsCard({
   const [editingBoard, setEditingBoard] = useState<TrackerBoard | null>(null)
   const [adding, setAdding] = useState(false)
   const [newType, setNewType] = useState<TrackerType>('ado')
-  const [pat, setPat] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -151,11 +149,9 @@ function BoardsCard({
           action: boards.find((b) => b.id === board.id) ? 'edit' : 'add',
           board,
           orgId,
-          ...(pat.trim() ? { pat: pat.trim() } : {}),
         }),
       })
       if (!res.ok) throw new Error((await res.json()).error)
-      setPat('')
       setAdding(false)
       setEditingBoard(null)
       onSaved()
@@ -208,8 +204,6 @@ function BoardsCard({
       {activeBoard && (
         <BoardForm
           board={activeBoard}
-          pat={pat}
-          onPat={setPat}
           onChange={updateDraft}
           onNewTypeChange={setNewType}
           newType={newType}
@@ -230,7 +224,7 @@ function BoardsCard({
             <Button size="sm" onClick={handleSave} disabled={saving}>
               {saving ? 'Saving…' : 'Save board'}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => { setAdding(false); setEditingBoard(null); setPat('') }}>
+            <Button variant="ghost" size="sm" onClick={() => { setAdding(false); setEditingBoard(null) }}>
               Cancel
             </Button>
           </>
@@ -241,11 +235,9 @@ function BoardsCard({
 }
 
 function BoardForm({
-  board, pat, onPat, onChange, onNewTypeChange, newType, isNew,
+  board, onChange, onNewTypeChange, newType, isNew,
 }: {
   board: TrackerBoard
-  pat: string
-  onPat: (v: string) => void
   onChange: (patch: Partial<TrackerBoard>) => void
   onNewTypeChange: (t: TrackerType) => void
   newType: TrackerType
@@ -284,15 +276,6 @@ function BoardForm({
         <div>
           <Label>ADO Project</Label>
           <Input value={board.adoProject} onChange={(e) => onChange({ adoProject: e.target.value })} placeholder="MyProject" />
-        </div>
-        <div>
-          <Label>Personal Access Token</Label>
-          <Input
-            type="password"
-            value={pat}
-            onChange={(e) => onPat(e.target.value)}
-            placeholder={board.adoPat ? '••••• (set — enter new to replace)' : 'Enter PAT'}
-          />
         </div>
         {board.type === 'ado' && (
           <div>

@@ -10,7 +10,7 @@ export interface TrackerBoard {
   type: TrackerType
   adoOrgUrl: string
   adoProject: string
-  adoPat: string        // AES-256-GCM encrypted at rest
+  adoPat?: string       // legacy encrypted field — no longer stored; global ADO_PAT env var is used
   adoTeam: string       // ADO Work Items only; ignored for Beads
   beadsRepo: string     // Beads only: ADO repo name containing .beads/
   beadsBranch: string   // Beads only: defaults to 'main'
