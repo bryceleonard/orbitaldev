@@ -63,12 +63,12 @@ export function BeadsKanban({
       {syncError && <p className="text-sm text-destructive">{syncError}</p>}
 
       {/* columns */}
-      <div className="flex gap-3 overflow-x-auto pb-4">
+      <div className="flex divide-x divide-border overflow-x-auto pb-4">
         {orderedKeys.map((status) => {
           const col = grouped.get(status) ?? []
           const label = COLUMN_LABELS[status] ?? statusLabel(status)
           return (
-            <div key={status} className="flex min-w-[260px] max-w-[300px] flex-1 flex-col gap-2">
+            <div key={status} className="flex min-w-[260px] max-w-[300px] flex-1 flex-col gap-2 px-4 first:pl-0 last:pr-0">
               {/* column header */}
               <div className="flex items-center gap-2 px-1">
                 <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: catColor(status) }} />
