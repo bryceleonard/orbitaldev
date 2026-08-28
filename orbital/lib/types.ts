@@ -16,20 +16,38 @@ export interface TrackerBoard {
   beadsBranch: string   // Beads only: defaults to 'main'
 }
 
+export interface BeadsDependency {
+  depends_on_id: string
+  type: string              // 'blocks', 'parent-child', 'waits-for', etc.
+}
+
+export interface BeadsComment {
+  id?: string
+  author: string
+  text: string
+  created_at?: string
+}
+
 export interface BeadsIssue {
   id: string
   title: string
-  type: 'bug' | 'feature' | 'task' | string
+  issue_type: string        // canonical: beads_rust uses issue_type
+  type?: string             // legacy alias kept for backward compat
   priority: 0 | 1 | 2 | 3 | 4
-  status: 'open' | 'in_progress' | 'in_review' | 'rework' | 'closed' | 'deferred' | string
+  status: string
   assignee: string
   labels: string[]
   description: string
-  dependencies: string[]
-  acceptance_criteria: string
-  parentId?: string     // set when issue is a child of an epic
-  created_at: string
-  updated_at: string
+  notes?: string
+  design?: string
+  dependencies: BeadsDependency[]
+  comments: BeadsComment[]
+  acceptance_criteria?: string
+  parent?: string           // beads_rust: direct parent ID field
+  parentId?: string         // normalised: set from parent field or parent-child dep
+  created_at?: string
+  updated_at?: string
+  created_by?: string
 }
 
 export interface Org {

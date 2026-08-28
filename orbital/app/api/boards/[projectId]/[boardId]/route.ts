@@ -3,7 +3,7 @@ export const runtime = 'nodejs'
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { fetchBacklog, fetchSprint, fetchDevPlan, fetchBeadsIssues } from '@/lib/ado/client'
-import type { TrackerBoard, BeadsIssue } from '@/lib/types'
+import type { TrackerBoard, BeadsIssue, BeadsDependency, BeadsComment } from '@/lib/types'
 
 const COOKIE = process.env.SESSION_COOKIE_NAME ?? '__session'
 const TTL_MS = 15 * 60 * 1000
@@ -72,14 +72,39 @@ function parseBeadsJsonl(text: string): BeadsIssue[] {
     .filter(Boolean)
     .map((line) => {
       const raw = JSON.parse(line) as Record<string, unknown>
-      const parentId = (raw['parent_id'] ?? raw['parentId']) as string | undefined
-      const { parent_id: _drop, ...rest } = raw as Record<string, unknown> & { parent_id?: unknown }
-      void _drop
+
+      // Normalize dependencies: string[] → BeadsDependency[]
+      const rawDeps = Array.isArray(raw['dependencies']) ? raw['dependencies'] : []
+      const dependencies: BeadsDependency[] = (rawDeps as unknown[]).map((d: unknown) => {
+        if (typeof d === 'string') return { depends_on_id: d, type: 'blocks' }
+        const dep = d as Record<string, unknown>
+        return {
+          depends_on_id: String(dep['depends_on_id'] ?? dep['id'] ?? ''),
+          type: String(dep['type'] ?? dep['dependency_type'] ?? 'blocks'),
+        }
+      }).filter((d: BeadsDependency) => d.depends_on_id)
+
+      // Normalize parent
+      const parentId = (raw['parent_id'] ?? raw['parentId'] ?? raw['parent']) as string | undefined
+      const parent = raw['parent'] as string | undefined
+
+      // issue_type vs type
+      const issue_type = String(raw['issue_type'] ?? raw['type'] ?? 'task')
+
+      // comments
+      const comments = Array.isArray(raw['comments']) ? raw['comments'] as BeadsComment[] : []
+
+      const { parent_id: _1, ...rest } = raw as Record<string, unknown> & { parent_id?: unknown }
+      void _1
+
       return {
         ...rest,
-        ...(parentId !== undefined && { parentId }),
+        issue_type,
+        dependencies,
+        comments,
         labels: Array.isArray(raw['labels']) ? raw['labels'] as string[] : [],
-        dependencies: Array.isArray(raw['dependencies']) ? raw['dependencies'] as string[] : [],
+        ...(parentId !== undefined && { parentId }),
+        ...(parent !== undefined && { parent }),
       } as BeadsIssue
     })
 }
