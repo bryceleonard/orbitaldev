@@ -35,7 +35,7 @@ export function ProjectTabs({ projectId, trackerBoards }: Props) {
   }
 
   return (
-    <nav className="flex border-b overflow-x-auto">
+    <nav className="flex border-b overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
       {STATIC_BEFORE.map(({ label, segment }) => {
         const href = `/projects/${projectId}/${segment}`
         return (
