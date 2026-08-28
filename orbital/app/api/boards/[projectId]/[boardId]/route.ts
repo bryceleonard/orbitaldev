@@ -114,7 +114,7 @@ export async function GET(
       return NextResponse.json({
         type: cacheType,
         payload: cached['payload'],
-        fetchedAt: cached['fetchedAt'],
+        fetchedAt: (cached['fetchedAt'] as { toDate?: () => Date } | null)?.toDate?.().toISOString() ?? String(cached['fetchedAt']),
         fromCache: true,
       })
     }
