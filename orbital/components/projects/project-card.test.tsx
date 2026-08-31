@@ -12,7 +12,7 @@ test('renders project name and member count', async () => {
         members: { uid1: 'owner' }, updatedAt: '2026-01-01',
         orgId: 'o1', description: '', techStack: [], pmTools: [],
         adoOrgUrl: '', adoProject: '', adoTeam: '', adoPat: '',
-        sow: { startDate: '', endDate: '', totalHours: 0, budgetHours: 0, summary: '' },
+        sow: { startDate: '', endDate: '', totalHours: 0, summary: '' },
         statusHeader: { scheduleStatus: 'on_track', budgetStatus: 'at_risk', scopeStatus: 'on_track' },
         createdBy: 'uid1', createdAt: '2026-01-01',
       }}

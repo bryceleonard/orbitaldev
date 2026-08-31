@@ -25,7 +25,7 @@ export async function createProject(
     status: 'active',
     trackerBoards: firstBoard ? [firstBoard] : [],
     members: { [uid]: 'owner' },
-    sow: { startDate: '', endDate: '', totalHours: 0, budgetHours: 0, summary: '' },
+    sow: { startDate: '', endDate: '', totalHours: 0, summary: '' },
     statusHeader: {
       scheduleStatus: 'on_track',
       budgetStatus: 'on_track',

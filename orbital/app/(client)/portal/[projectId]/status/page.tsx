@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
 import { listRisks } from '@/lib/firestore/risks'
-import { listIssues } from '@/lib/firestore/issues'
 import { listClientActions } from '@/lib/firestore/client-actions'
 import { StatusBadge } from '@/components/status/status-badge'
 import { Badge } from '@/components/ui/badge'
@@ -33,11 +32,6 @@ export default function PortalStatusPage() {
     queryFn: () => listRisks(orgId!, projectId),
     enabled,
   })
-  const { data: issues = [] } = useQuery({
-    queryKey: ['issues', orgId, projectId],
-    queryFn: () => listIssues(orgId!, projectId),
-    enabled,
-  })
   const { data: clientActions = [] } = useQuery({
     queryKey: ['clientActions', orgId, projectId],
     queryFn: () => listClientActions(orgId!, projectId),
@@ -48,7 +42,6 @@ export default function PortalStatusPage() {
 
   const schedule = schedulePercent(project.sow)
   const openRisks = risks.filter((r) => r.status === 'open')
-  const openIssues = issues.filter((i) => i.status === 'open')
   const unresolvedActions = clientActions.filter((a) => !a.resolved)
 
   return (
@@ -104,7 +97,7 @@ export default function PortalStatusPage() {
 
       {openRisks.length > 0 && (
         <section>
-          <h3 className="font-semibold mb-3">Open Risks</h3>
+          <h3 className="font-semibold mb-3">Open Risks and Issues</h3>
           <ul className="flex flex-col gap-2">
             {openRisks.map((r) => (
               <li key={r.id} className="border rounded-md px-4 py-3 text-sm flex items-start gap-3">
@@ -119,24 +112,7 @@ export default function PortalStatusPage() {
         </section>
       )}
 
-      {openIssues.length > 0 && (
-        <section>
-          <h3 className="font-semibold mb-3">Open Issues</h3>
-          <ul className="flex flex-col gap-2">
-            {openIssues.map((i) => (
-              <li key={i.id} className="border rounded-md px-4 py-3 text-sm flex items-start gap-3">
-                <Badge variant="outline" className={SEVERITY_COLOR[i.severity]}>{i.severity}</Badge>
-                <div>
-                  <p className="font-medium">{i.title}</p>
-                  {i.description && <p className="text-muted-foreground">{i.description}</p>}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {unresolvedActions.length === 0 && openRisks.length === 0 && openIssues.length === 0 && (
+      {unresolvedActions.length === 0 && openRisks.length === 0 && (
         <p className="text-muted-foreground text-sm">No open items at this time.</p>
       )}
     </div>

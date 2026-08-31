@@ -14,7 +14,7 @@ const STATIC_BEFORE = [
 const STATIC_AFTER = [
   { label: 'Stakeholders', segment: 'stakeholders' },
   { label: 'Links',        segment: 'helpful-links' },
-  { label: 'Roadmap',      segment: 'roadmap' },
+  { label: 'Milestones',   segment: 'milestones' },
 ]
 
 interface Props {

@@ -7,14 +7,10 @@ import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
 import { updateProject } from '@/lib/firestore/projects'
 import { listRisks, addRisk, updateRisk, deleteRisk } from '@/lib/firestore/risks'
-import { listIssues, addIssue, updateIssue, deleteIssue } from '@/lib/firestore/issues'
-import { listOnboardItems, addOnboardItem, updateOnboardItem, deleteOnboardItem } from '@/lib/firestore/onboard-items'
 import { listClientActions, addClientAction, updateClientAction, deleteClientAction } from '@/lib/firestore/client-actions'
-import { listStatusSnapshots, addStatusSnapshot } from '@/lib/firestore/status-snapshots'
 import { CrudTable } from '@/components/tables/crud-table'
 import { StatusBadge } from '@/components/status/status-badge'
-import { SnapshotForm } from '@/components/status/snapshot-form'
-import type { StatusLevel, Risk, Issue, OnboardItem, ClientAction } from '@/lib/types'
+import type { StatusLevel, Risk, ClientAction } from '@/lib/types'
 
 const STATUS_OPTIONS: StatusLevel[] = ['on_track', 'at_risk', 'off_track']
 
@@ -36,10 +32,7 @@ export default function StatusPage() {
 
   const enabled = !!orgId
   const { data: risks = [] } = useQuery({ queryKey: ['risks', orgId, projectId], queryFn: () => listRisks(orgId!, projectId), enabled })
-  const { data: issues = [] } = useQuery({ queryKey: ['issues', orgId, projectId], queryFn: () => listIssues(orgId!, projectId), enabled })
-  const { data: onboardItems = [] } = useQuery({ queryKey: ['onboard', orgId, projectId], queryFn: () => listOnboardItems(orgId!, projectId), enabled })
   const { data: clientActions = [] } = useQuery({ queryKey: ['clientActions', orgId, projectId], queryFn: () => listClientActions(orgId!, projectId), enabled })
-  const { data: snapshots = [] } = useQuery({ queryKey: ['snapshots', orgId, projectId], queryFn: () => listStatusSnapshots(orgId!, projectId), enabled })
 
   if (!project) return <p className="text-muted-foreground">Loading…</p>
 
@@ -91,7 +84,7 @@ export default function StatusPage() {
             ? <input type="number" value={budgetConsumed} onChange={(e) => setBudgetConsumed(+e.target.value)} className="text-2xl font-semibold w-24 border-b focus:outline-none" />
             : <p className="text-2xl font-semibold">{budgetConsumed}</p>
           }
-          <p className="text-xs text-muted-foreground">of {project.sow.budgetHours} hours</p>
+          <p className="text-xs text-muted-foreground">of {project.sow.totalHours} hours</p>
         </div>
         <div className="border rounded-md p-4">
           <p className="text-sm text-muted-foreground">Scope</p>
@@ -101,25 +94,7 @@ export default function StatusPage() {
       </section>
 
       <section>
-        <h2 className="font-semibold mb-3">Onboard Items</h2>
-        <CrudTable<OnboardItem>
-          columns={[
-            { key: 'item', label: 'Item', type: 'text' },
-            { key: 'owner', label: 'Owner', type: 'text' },
-            { key: 'description', label: 'Description', type: 'text' },
-            { key: 'actionItems', label: 'Action Items', type: 'text' },
-            { key: 'complete', label: 'Done', type: 'toggle' },
-          ]}
-          rows={onboardItems}
-          canEdit={canEdit}
-          onAdd={(d) => addOnboardItem(orgId!, projectId, d as Omit<OnboardItem, 'id'>).then(inv('onboard'))}
-          onUpdate={(id, d) => updateOnboardItem(orgId!, projectId, id, d).then(inv('onboard'))}
-          onDelete={(id) => deleteOnboardItem(orgId!, projectId, id).then(inv('onboard'))}
-        />
-      </section>
-
-      <section>
-        <h2 className="font-semibold mb-3">Risks</h2>
+        <h2 className="font-semibold mb-3">Risks and Issues</h2>
         <CrudTable<Risk>
           columns={[
             { key: 'title', label: 'Title', type: 'text' },
@@ -133,24 +108,6 @@ export default function StatusPage() {
           onAdd={(d) => addRisk(orgId!, projectId, d as Omit<Risk, 'id'>).then(inv('risks'))}
           onUpdate={(id, d) => updateRisk(orgId!, projectId, id, d).then(inv('risks'))}
           onDelete={(id) => deleteRisk(orgId!, projectId, id).then(inv('risks'))}
-        />
-      </section>
-
-      <section>
-        <h2 className="font-semibold mb-3">Issues</h2>
-        <CrudTable<Issue>
-          columns={[
-            { key: 'title', label: 'Title', type: 'text' },
-            { key: 'owner', label: 'Owner', type: 'text' },
-            { key: 'severity', label: 'Severity', type: 'select', options: ['low', 'medium', 'high'] },
-            { key: 'description', label: 'Description', type: 'text' },
-            { key: 'status', label: 'Status', type: 'select', options: ['open', 'resolved'] },
-          ]}
-          rows={issues}
-          canEdit={canEdit}
-          onAdd={(d) => addIssue(orgId!, projectId, d as Omit<Issue, 'id'>).then(inv('issues'))}
-          onUpdate={(id, d) => updateIssue(orgId!, projectId, id, d).then(inv('issues'))}
-          onDelete={(id) => deleteIssue(orgId!, projectId, id).then(inv('issues'))}
         />
       </section>
 
@@ -170,26 +127,6 @@ export default function StatusPage() {
         />
       </section>
 
-      {canEdit && (
-        <section>
-          <h2 className="font-semibold mb-3">Status Snapshots</h2>
-          <SnapshotForm
-            project={project}
-            budgetConsumed={budgetConsumed}
-            onSave={(d) => addStatusSnapshot(orgId!, projectId, { ...d, createdBy: user!.uid }).then(inv('snapshots'))}
-          />
-          {snapshots.length > 0 && (
-            <ul className="mt-4 flex flex-col gap-2">
-              {[...snapshots].sort((a, b) => b.date.localeCompare(a.date)).map((s) => (
-                <li key={s.id} className="border rounded-md p-3 text-sm">
-                  <p className="font-medium">{s.date} — Schedule {s.schedulePercent}% · Budget {s.budgetConsumed}h · Scope {s.scopeComplete}</p>
-                  {s.notes && <p className="text-muted-foreground mt-1">{s.notes}</p>}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
     </div>
   )
 }

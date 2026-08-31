@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/use-auth'
@@ -25,8 +25,12 @@ export default function SowPage() {
     enabled: !!orgId,
   })
 
-  const [sow, setSow] = useState(project?.sow ?? { startDate: '', endDate: '', totalHours: 0, budgetHours: 0, summary: '' })
+  const [sow, setSow] = useState(project?.sow ?? { startDate: '', endDate: '', totalHours: 0, summary: '' })
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (project?.sow) setSow(project.sow)
+  }, [project])
   const [newResource, setNewResource] = useState<Omit<Resource, 'id'>>({ name: '', role: '', hours: 0 })
 
   const canEdit = user && project
@@ -63,8 +67,7 @@ export default function SowPage() {
         <div className="grid grid-cols-2 gap-4">
           <div><Label>Start date</Label><Input type="date" value={sow.startDate} onChange={(e) => setSow({ ...sow, startDate: e.target.value })} disabled={!canEdit} /></div>
           <div><Label>End date</Label><Input type="date" value={sow.endDate} onChange={(e) => setSow({ ...sow, endDate: e.target.value })} disabled={!canEdit} /></div>
-          <div><Label>Total hours</Label><Input type="number" value={sow.totalHours} onChange={(e) => setSow({ ...sow, totalHours: +e.target.value })} disabled={!canEdit} /></div>
-          <div><Label>Budget hours</Label><Input type="number" value={sow.budgetHours} onChange={(e) => setSow({ ...sow, budgetHours: +e.target.value })} disabled={!canEdit} /></div>
+          <div><Label>Total hours</Label><Input type="number" value={sow.totalHours || ''} onChange={(e) => setSow({ ...sow, totalHours: e.target.value === '' ? 0 : +e.target.value })} onFocus={(e) => e.target.select()} disabled={!canEdit} /></div>
         </div>
         <div className="mt-4"><Label>Summary</Label><Input value={sow.summary} onChange={(e) => setSow({ ...sow, summary: e.target.value })} disabled={!canEdit} /></div>
         {canEdit && <Button onClick={handleSaveSow} disabled={saving} className="mt-4">{saving ? 'Saving…' : 'Save SOW'}</Button>}
@@ -87,7 +90,7 @@ export default function SowPage() {
               <tr className="border-t bg-muted/40">
                 <td className="p-2"><Input placeholder="Name" value={newResource.name} onChange={(e) => setNewResource({ ...newResource, name: e.target.value })} /></td>
                 <td className="p-2"><Input placeholder="Role" value={newResource.role} onChange={(e) => setNewResource({ ...newResource, role: e.target.value })} /></td>
-                <td className="p-2"><Input type="number" placeholder="0" value={newResource.hours} onChange={(e) => setNewResource({ ...newResource, hours: +e.target.value })} /></td>
+                <td className="p-2"><Input type="number" placeholder="0" value={newResource.hours || ''} onChange={(e) => setNewResource({ ...newResource, hours: e.target.value === '' ? 0 : +e.target.value })} onFocus={(e) => e.target.select()} /></td>
                 <td className="p-2"><Button size="sm" onClick={handleAddResource}>Add</Button></td>
               </tr>
             )}

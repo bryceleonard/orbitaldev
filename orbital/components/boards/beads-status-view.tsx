@@ -11,6 +11,7 @@ import {
   initials,
 } from '@/lib/beads-view'
 import { BeadDetailDrawer } from './bead-detail-drawer'
+import { BeadsVelocity } from './beads-velocity'
 import { Button } from '@/components/ui/button'
 
 function Avatar({ name }: { name: string }) {
@@ -176,6 +177,9 @@ export function BeadsStatusView({
           />
         </div>
       </div>
+
+      {/* Velocity chart */}
+      <BeadsVelocity issues={issues} />
 
       {/* Workstreams / epics rollup */}
       {epicsWithChildren.length > 0 && (

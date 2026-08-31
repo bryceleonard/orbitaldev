@@ -6,7 +6,7 @@ const mockProject = {
   techStack: ['React', 'Next.js'], pmTools: [], status: 'active' as const,
   adoOrgUrl: '', adoProject: '', adoTeam: '', adoPat: '',
   members: { uid1: 'viewer' as const },
-  sow: { startDate: '2026-01-01', endDate: '2026-12-31', totalHours: 200, budgetHours: 180, summary: 'Build it.' },
+  sow: { startDate: '2026-01-01', endDate: '2026-12-31', totalHours: 200, summary: 'Build it.' },
   statusHeader: { scheduleStatus: 'on_track' as const, budgetStatus: 'at_risk' as const, scopeStatus: 'on_track' as const },
   createdBy: 'uid1', createdAt: '2026-01-01', updatedAt: '2026-01-01',
 }

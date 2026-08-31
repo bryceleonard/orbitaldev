@@ -5,10 +5,11 @@ import { cn } from '@/lib/utils'
 import type { TrackerBoard } from '@/lib/types'
 
 const STATIC_TABS = [
-  { label: 'Overview',   segment: 'overview' },
-  { label: 'Status',     segment: 'status' },
-  { label: 'Documents',  segment: 'documents' },
-  { label: 'Links',      segment: 'links' },
+  { label: 'Overview',    segment: 'overview' },
+  { label: 'Status',      segment: 'status' },
+  { label: 'Milestones',  segment: 'milestones' },
+  { label: 'Documents',   segment: 'documents' },
+  { label: 'Links',       segment: 'links' },
 ]
 
 interface Props {

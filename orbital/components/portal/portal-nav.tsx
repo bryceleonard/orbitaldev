@@ -16,7 +16,7 @@ export function PortalNav({ projectName }: Props) {
   }
 
   return (
-    <header className="flex items-center justify-between border-b px-8 py-4">
+    <header className="flex items-center justify-between border-b px-8 py-4 print:hidden">
       <div className="flex items-center gap-3">
         <span className="font-semibold text-lg">Orbital</span>
         {projectName && (

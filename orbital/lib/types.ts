@@ -68,7 +68,6 @@ export interface Sow {
   startDate: string
   endDate: string
   totalHours: number
-  budgetHours: number
   summary: string
 }
 
@@ -165,11 +164,24 @@ export interface HelpfulLink {
   url: string
 }
 
-export interface RoadmapItem {
+export type MilestoneStatus = 'not_started' | 'in_progress' | 'blocked' | 'completed'
+
+export interface MilestoneHistoryEntry {
+  timestamp: string
+  fromStatus: MilestoneStatus | null
+  toStatus: MilestoneStatus
+}
+
+export interface Milestone {
   id: string
-  title: string
-  description: string
-  targetDate: string
+  name: string
+  status: MilestoneStatus
+  startDate: string
+  endDate: string
+  history: MilestoneHistoryEntry[]
+  createdAt: string
+  updatedAt: string
+  createdBy: string
 }
 
 export interface AdoCache {
@@ -180,14 +192,3 @@ export interface AdoCache {
   fetchedAt: string
 }
 
-export interface StatusSnapshot {
-  id: string
-  date: string
-  schedulePercent: number
-  budgetConsumed: number
-  scopeComplete: string
-  notes: string
-  adoCacheRef: string
-  createdBy: string
-  createdAt: string
-}

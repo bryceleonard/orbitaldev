@@ -19,7 +19,7 @@ const beadsBoard: TrackerBoard = {
 test('renders static tabs without boards', async () => {
   const { ProjectTabs } = await import('./project-tabs')
   render(<ProjectTabs projectId="p1" trackerBoards={[]} />)
-  for (const label of ['Overview', 'SOW', 'Status', 'Files', 'Stakeholders', 'Links', 'Roadmap']) {
+  for (const label of ['Overview', 'SOW', 'Status', 'Files', 'Stakeholders', 'Links', 'Milestones']) {
     expect(screen.getByText(label)).toBeInTheDocument()
   }
   expect(screen.queryByText('ADO Board')).not.toBeInTheDocument()
