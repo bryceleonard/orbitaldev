@@ -5,7 +5,7 @@ import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
 import { getLatestBoardCache } from '@/lib/firestore/ado-cache'
 import type { BeadsIssue } from '@/lib/types'
-import { BeadsKanban } from '@/components/boards/beads-kanban'
+import { BeadsStatusView } from '@/components/boards/beads-status-view'
 
 export default function PortalBoardPage() {
   const { projectId, boardId } = useParams<{ projectId: string; boardId: string }>()
@@ -101,5 +101,5 @@ function PortalBeadsView({ projectId, boardId, orgId }: { projectId: string; boa
   if (!cache) return <p className="text-muted-foreground">Issue data not yet available.</p>
 
   const issues = Array.isArray(cache.payload) ? cache.payload as BeadsIssue[] : []
-  return <BeadsKanban issues={issues} fetchedAt={cache.fetchedAt} />
+  return <BeadsStatusView issues={issues} fetchedAt={cache.fetchedAt} />
 }

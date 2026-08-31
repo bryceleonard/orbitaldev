@@ -8,7 +8,7 @@ import { getLatestBoardCache } from '@/lib/firestore/ado-cache'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { BeadsIssue } from '@/lib/types'
-import { BeadsKanban } from '@/components/boards/beads-kanban'
+import { BeadsStatusView } from '@/components/boards/beads-status-view'
 
 export default function BoardPage() {
   const { projectId, boardId } = useParams<{ projectId: string; boardId: string }>()
@@ -175,7 +175,7 @@ function BeadsBoardView({ projectId, boardId, orgId }: { projectId: string; boar
 
   const issues = Array.isArray(cache.payload) ? cache.payload as BeadsIssue[] : []
   return (
-    <BeadsKanban
+    <BeadsStatusView
       issues={issues}
       fetchedAt={cache.fetchedAt}
       onSync={handleSync}
