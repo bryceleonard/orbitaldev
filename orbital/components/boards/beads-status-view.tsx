@@ -93,6 +93,8 @@ export function BeadsStatusView({
   syncError?: string | null
 }) {
   const [selected, setSelected] = useState<BeadsIssue | null>(null)
+  const [expandedEpicId, setExpandedEpicId] = useState<string | null>(null)
+  const [closedTypeFilter, setClosedTypeFilter] = useState<string | null>(null)
   const [showAllClosed, setShowAllClosed] = useState(false)
   const [showAllOpen, setShowAllOpen] = useState(false)
 
@@ -184,22 +186,35 @@ export function BeadsStatusView({
           <div className="flex flex-col gap-2">
             {epicsWithChildren.map((epic) => {
               const { closed: ec, total: et, pct: ep } = epicProgress(epic.id, issues)
+              const isExpanded = expandedEpicId === epic.id
+              const children = childrenOf(epic.id, issues)
               return (
-                <button
-                  key={epic.id}
-                  onClick={() => setSelected(epic)}
-                  className="w-full flex items-center gap-4 px-4 py-3 rounded-lg border hover:bg-muted/50 transition-colors text-left"
-                >
-                  <span className="flex-1 min-w-0 text-sm font-medium truncate">{epic.title}</span>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">{ec}/{et}</span>
-                  <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden flex-shrink-0">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${ep}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-semibold w-8 text-right">{ep}%</span>
-                </button>
+                <div key={epic.id} className="rounded-lg border overflow-hidden">
+                  <button
+                    onClick={() => setExpandedEpicId(isExpanded ? null : epic.id)}
+                    className="w-full flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
+                  >
+                    <span className="text-muted-foreground w-3 flex-shrink-0 text-xs">
+                      {isExpanded ? '▾' : '▸'}
+                    </span>
+                    <span className="flex-1 min-w-0 text-sm font-medium truncate">{epic.title}</span>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">{ec}/{et}</span>
+                    <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{ width: `${ep}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold w-8 text-right">{ep}%</span>
+                  </button>
+                  {isExpanded && (
+                    <div className="border-t divide-y divide-border bg-muted/20">
+                      {children.map((child) => (
+                        <BeadRow key={child.id} bead={child} onClick={() => setSelected(child)} />
+                      ))}
+                    </div>
+                  )}
+                </div>
               )
             })}
           </div>
@@ -225,26 +240,62 @@ export function BeadsStatusView({
       )}
 
       {/* Recently Completed */}
-      {closed.length > 0 && (
-        <section>
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-            Completed <span className="text-foreground">{closed.length}</span>
-          </h2>
-          <div className="rounded-lg border divide-y divide-border">
-            {visibleClosed.map((b) => (
-              <BeadRow key={b.id} bead={b} onClick={() => setSelected(b)} />
-            ))}
-          </div>
-          {closed.length > 8 && (
-            <button
-              onClick={() => setShowAllClosed(!showAllClosed)}
-              className="mt-2 text-xs text-primary hover:underline"
-            >
-              {showAllClosed ? 'Show less' : `Show all ${closed.length}`}
-            </button>
-          )}
-        </section>
-      )}
+      {closed.length > 0 && (() => {
+        const closedTypes = [...new Set(closed.map((b) => b.issue_type ?? b.type ?? 'task'))]
+        const filteredClosed = closedTypeFilter
+          ? closed.filter((b) => (b.issue_type ?? b.type ?? 'task') === closedTypeFilter)
+          : closed
+        const visibleFiltered = showAllClosed ? filteredClosed : filteredClosed.slice(0, 8)
+        return (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Completed <span className="text-foreground">{filteredClosed.length}</span>
+              </h2>
+              {closedTypes.length > 1 && (
+                <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                  <button
+                    onClick={() => { setClosedTypeFilter(null); setShowAllClosed(false) }}
+                    className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border transition-colors ${
+                      closedTypeFilter === null
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {closedTypes.map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => { setClosedTypeFilter(t); setShowAllClosed(false) }}
+                      className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border transition-colors capitalize ${
+                        closedTypeFilter === t
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="rounded-lg border divide-y divide-border">
+              {visibleFiltered.map((b) => (
+                <BeadRow key={b.id} bead={b} onClick={() => setSelected(b)} />
+              ))}
+            </div>
+            {filteredClosed.length > 8 && (
+              <button
+                onClick={() => setShowAllClosed(!showAllClosed)}
+                className="mt-2 text-xs text-primary hover:underline"
+              >
+                {showAllClosed ? 'Show less' : `Show all ${filteredClosed.length}`}
+              </button>
+            )}
+          </section>
+        )
+      })()}
 
       {/* Open / queued */}
       {open.length > 0 && (
