@@ -23,9 +23,9 @@ export function PortalProjectTabs({ projectId, trackerBoards }: Props) {
 
   function tabClass(active: boolean) {
     return cn(
-      'whitespace-nowrap px-4 py-3 font-mono text-[11px] uppercase tracking-[0.12em] border-b-2 -mb-px transition-colors',
+      'whitespace-nowrap px-4 py-3 text-sm border-b-2 -mb-px transition-colors',
       active
-        ? 'border-[#fad542] text-foreground'
+        ? 'border-primary font-medium text-primary'
         : 'border-transparent text-muted-foreground hover:text-foreground',
     )
   }

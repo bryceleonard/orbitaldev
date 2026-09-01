@@ -9,9 +9,9 @@ interface CircularProgressProps {
 }
 
 const STATUS_COLOR: Record<StatusLevel, string> = {
-  on_track: '#fad542',
-  at_risk: '#f59e0b',
-  off_track: '#ef4444',
+  on_track:  '#16a34a',
+  at_risk:   '#d97706',
+  off_track: '#dc2626',
 }
 
 export function CircularProgress({
@@ -34,7 +34,7 @@ export function CircularProgress({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="rgba(255,255,255,0.08)"
+          stroke="rgba(0,0,0,0.08)"
           strokeWidth={strokeWidth}
           fill="none"
         />

@@ -36,19 +36,16 @@ function budgetPercent(hoursConsumed: number, totalHours: number): number {
 }
 
 const SEVERITY_COLOR: Record<string, string> = {
-  low:    'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  medium: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  high:   'bg-red-500/10  text-red-400  border-red-500/20',
+  low:    'bg-blue-100 text-blue-800 border-blue-200',
+  medium: 'bg-amber-100 text-amber-800 border-amber-200',
+  high:   'bg-red-100 text-red-800 border-red-200',
 }
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <div className="flex items-center gap-2 mb-4">
-      <div className="h-px w-7 bg-[#fad542]" />
-      <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#fad542]">
-        {children}
-      </span>
-    </div>
+    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+      {children}
+    </h3>
   )
 }
 
