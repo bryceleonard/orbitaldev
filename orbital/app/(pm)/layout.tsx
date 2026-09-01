@@ -45,7 +45,7 @@ export default async function PmLayout({ children }: { children: React.ReactNode
   }
 
   return (
-    <div className={`orbital dark flex h-screen ${bricolage.variable} ${jetbrains.variable} ${instrumentSerif.variable}`}>
+    <div className={`orbital dark flex h-screen bg-background text-foreground ${bricolage.variable} ${jetbrains.variable} ${instrumentSerif.variable}`}>
       <PmSidebar />
       <main className="flex-1 overflow-y-auto">{children}</main>
     </div>

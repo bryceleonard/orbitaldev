@@ -20,7 +20,7 @@ const instrumentSerif = Instrument_Serif({
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`orbital dark min-h-screen flex flex-col ${bricolage.variable} ${jetbrains.variable} ${instrumentSerif.variable}`}>
+    <div className={`orbital dark min-h-screen flex flex-col bg-background text-foreground ${bricolage.variable} ${jetbrains.variable} ${instrumentSerif.variable}`}>
       <PortalNav />
       <main className="flex-1">{children}</main>
     </div>
