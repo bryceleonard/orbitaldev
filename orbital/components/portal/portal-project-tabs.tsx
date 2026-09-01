@@ -5,8 +5,7 @@ import { cn } from '@/lib/utils'
 import type { TrackerBoard } from '@/lib/types'
 
 const TABS_BEFORE_BOARDS = [
-  { label: 'Overview',   segment: 'overview' },
-  { label: 'Milestones', segment: 'milestones' },
+  { label: 'Overview', segment: 'overview' },
 ]
 const TABS_AFTER_BOARDS = [
   { label: 'Documents', segment: 'documents' },

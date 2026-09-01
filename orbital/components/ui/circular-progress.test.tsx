@@ -48,31 +48,31 @@ describe('CircularProgress', () => {
     expect(offset).toBeCloseTo(0, 0)
   })
 
-  test('uses gold stroke for on_track', () => {
+  test('uses green stroke for on_track', () => {
     const { container } = render(
       <CircularProgress percent={75} status="on_track"><span /></CircularProgress>
     )
-    expect(container.querySelectorAll('circle')[1]).toHaveAttribute('stroke', '#fad542')
+    expect(container.querySelectorAll('circle')[1]).toHaveAttribute('stroke', '#16a34a')
   })
 
   test('uses amber stroke for at_risk', () => {
     const { container } = render(
       <CircularProgress percent={75} status="at_risk"><span /></CircularProgress>
     )
-    expect(container.querySelectorAll('circle')[1]).toHaveAttribute('stroke', '#f59e0b')
+    expect(container.querySelectorAll('circle')[1]).toHaveAttribute('stroke', '#d97706')
   })
 
   test('uses red stroke for off_track', () => {
     const { container } = render(
       <CircularProgress percent={75} status="off_track"><span /></CircularProgress>
     )
-    expect(container.querySelectorAll('circle')[1]).toHaveAttribute('stroke', '#ef4444')
+    expect(container.querySelectorAll('circle')[1]).toHaveAttribute('stroke', '#dc2626')
   })
 
-  test('track ring uses low-opacity white stroke', () => {
+  test('track ring uses low-opacity dark stroke', () => {
     const { container } = render(
       <CircularProgress percent={50} status="on_track"><span /></CircularProgress>
     )
-    expect(container.querySelectorAll('circle')[0]).toHaveAttribute('stroke', 'rgba(255,255,255,0.08)')
+    expect(container.querySelectorAll('circle')[0]).toHaveAttribute('stroke', 'rgba(0,0,0,0.08)')
   })
 })

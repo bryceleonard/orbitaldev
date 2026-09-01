@@ -43,6 +43,7 @@ vi.mock('@/lib/firebase/client', () => ({ auth: {}, db: {}, storage: {} }))
 vi.mock('@/lib/firestore/resources', () => ({ listResources: vi.fn() }))
 vi.mock('@/lib/firestore/risks', () => ({ listRisks: vi.fn() }))
 vi.mock('@/lib/firestore/client-actions', () => ({ listClientActions: vi.fn() }))
+vi.mock('@/lib/firestore/milestones', () => ({ listMilestones: vi.fn() }))
 vi.mock('@/hooks/use-org', () => ({ useOrgId: vi.fn(() => 'o1') }))
 vi.mock('next/navigation', () => ({ useParams: vi.fn(() => ({ projectId: 'p1' })) }))
 vi.mock('@/hooks/use-project', () => ({ useProject: vi.fn(() => ({ data: mockProject })) }))
@@ -52,9 +53,10 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   return {
     ...actual,
     useQuery: vi.fn(({ queryKey }: { queryKey: string[] }) => {
-      if (queryKey[0] === 'resources') return { data: mockResources }
-      if (queryKey[0] === 'risks')     return { data: mockRisks }
+      if (queryKey[0] === 'resources')     return { data: mockResources }
+      if (queryKey[0] === 'risks')         return { data: mockRisks }
       if (queryKey[0] === 'clientActions') return { data: mockActions }
+      if (queryKey[0] === 'milestones')    return { data: [] }
       return { data: [] }
     }),
   }

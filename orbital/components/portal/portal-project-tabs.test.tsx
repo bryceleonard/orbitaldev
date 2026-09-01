@@ -19,7 +19,7 @@ const beadsBoard: TrackerBoard = {
 test('renders static tabs without boards', async () => {
   const { PortalProjectTabs } = await import('./portal-project-tabs')
   render(<PortalProjectTabs projectId="p1" trackerBoards={[]} />)
-  for (const label of ['Overview', 'Milestones', 'Documents', 'Links']) {
+  for (const label of ['Overview', 'Documents', 'Links']) {
     expect(screen.getByText(label)).toBeInTheDocument()
   }
   expect(screen.queryByText('Status')).not.toBeInTheDocument()

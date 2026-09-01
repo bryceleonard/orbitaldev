@@ -13,8 +13,7 @@ export default function PortalProjectLayout({ children }: { children: React.Reac
   return (
     <div className="flex flex-col">
       <div className="border-b px-8 pt-6 pb-0 print:hidden">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-semibold">{project?.name ?? '—'}</h1>
+        <div className="flex items-center justify-end mb-4">
           <button
             onClick={() => window.print()}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"

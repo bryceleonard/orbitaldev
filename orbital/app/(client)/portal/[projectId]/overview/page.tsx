@@ -6,10 +6,12 @@ import { useProject } from '@/hooks/use-project'
 import { listResources } from '@/lib/firestore/resources'
 import { listRisks } from '@/lib/firestore/risks'
 import { listClientActions } from '@/lib/firestore/client-actions'
+import { listMilestones } from '@/lib/firestore/milestones'
 import { CircularProgress } from '@/components/ui/circular-progress'
 import { StatusBadge } from '@/components/status/status-badge'
+import { MilestonesGantt } from '@/components/milestones/milestones-gantt'
 import { Badge } from '@/components/ui/badge'
-import type { StatusLevel } from '@/lib/types'
+import type { StatusLevel, MilestoneStatus } from '@/lib/types'
 
 function schedulePercent(sow: { startDate: string; endDate: string }): number {
   if (!sow.startDate || !sow.endDate) return 0
@@ -41,6 +43,20 @@ const SEVERITY_COLOR: Record<string, string> = {
   high:   'bg-red-100 text-red-800 border-red-200',
 }
 
+const MILESTONE_STATUS_LABEL: Record<MilestoneStatus, string> = {
+  not_started: 'Not Started',
+  in_progress: 'In Progress',
+  blocked:     'Blocked',
+  completed:   'Completed',
+}
+
+const MILESTONE_STATUS_CLASS: Record<MilestoneStatus, string> = {
+  not_started: 'bg-muted text-muted-foreground border-border',
+  in_progress: 'bg-primary/10 text-primary border-primary/20',
+  blocked:     'bg-destructive/10 text-destructive border-destructive/20',
+  completed:   'bg-green-100 text-green-800 border-green-200',
+}
+
 function SectionLabel({ children }: { children: string }) {
   return (
     <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
@@ -70,6 +86,11 @@ export default function PortalOverviewPage() {
     queryFn: () => listClientActions(orgId!, projectId),
     enabled,
   })
+  const { data: milestones = [] } = useQuery({
+    queryKey: ['milestones', orgId, projectId],
+    queryFn: () => listMilestones(orgId!, projectId),
+    enabled,
+  })
 
   if (!project) return <p className="text-muted-foreground">Loading…</p>
 
@@ -79,9 +100,10 @@ export default function PortalOverviewPage() {
   const budgetPct = budgetPercent(hoursConsumed, project.sow.totalHours)
   const openRisks = risks.filter((r) => r.status === 'open')
   const unresolvedActions = clientActions.filter((a) => !a.resolved)
+  const sortedMilestones = [...milestones].sort((a, b) => a.startDate.localeCompare(b.startDate))
 
   return (
-    <div className="max-w-3xl flex flex-col gap-10">
+    <div className="max-w-5xl flex flex-col gap-10">
       {/* Project header */}
       <section className="flex flex-col gap-3">
         <div>
@@ -105,10 +127,40 @@ export default function PortalOverviewPage() {
         )}
       </section>
 
-      {/* Metrics row */}
+      {/* Health + Risks row */}
       <section>
         <SectionLabel>Health</SectionLabel>
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-3 gap-6">
+          {/* Open Risks column */}
+          <div className="bg-card border rounded-md p-6 flex flex-col gap-3">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+              Open Risks
+            </p>
+            {openRisks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No open risks.</p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {openRisks.map((r) => (
+                  <li key={r.id} className="flex items-start gap-2">
+                    <Badge
+                      variant="outline"
+                      className={`shrink-0 ${SEVERITY_COLOR[r.severity] ?? ''}`}
+                    >
+                      {r.severity.toUpperCase()}
+                    </Badge>
+                    <div>
+                      <p className="text-sm font-medium leading-snug">{r.title}</p>
+                      {r.description && (
+                        <p className="text-xs text-muted-foreground">{r.description}</p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Schedule */}
           <MetricCard
             label="Schedule"
             percent={schedulePct}
@@ -117,6 +169,8 @@ export default function PortalOverviewPage() {
             centerSub="elapsed"
             metricLine={`${daysElapsed} of ${totalDays} days`}
           />
+
+          {/* Budget */}
           <MetricCard
             label="Budget"
             percent={budgetPct}
@@ -132,32 +186,39 @@ export default function PortalOverviewPage() {
         </div>
       </section>
 
-      {/* Open risks */}
-      <section>
-        <SectionLabel>Open Risks</SectionLabel>
-        {openRisks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No open risks.</p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {openRisks.map((r) => (
-              <li key={r.id} className="bg-card border rounded-md px-4 py-3 flex items-start gap-3">
-                <Badge
-                  variant="outline"
-                  className={SEVERITY_COLOR[r.severity] ?? ''}
-                >
-                  {r.severity.toUpperCase()}
-                </Badge>
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-sm font-medium">{r.title}</p>
-                  {r.description && (
-                    <p className="text-sm text-muted-foreground">{r.description}</p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {/* Milestones */}
+      {milestones.length > 0 && (
+        <section>
+          <SectionLabel>Milestones</SectionLabel>
+          <div className="flex flex-col gap-6">
+            <MilestonesGantt milestones={milestones} showTooltips />
+            <table className="w-full text-sm border rounded-md overflow-hidden">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Milestone</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Start</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">End</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedMilestones.map((m, i) => (
+                  <tr key={m.id} className={i % 2 === 0 ? '' : 'bg-muted/20'}>
+                    <td className="px-4 py-2 font-medium">{m.name}</td>
+                    <td className="px-4 py-2">
+                      <Badge variant="outline" className={MILESTONE_STATUS_CLASS[m.status]}>
+                        {MILESTONE_STATUS_LABEL[m.status]}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-2 text-muted-foreground font-mono text-xs">{m.startDate}</td>
+                    <td className="px-4 py-2 text-muted-foreground font-mono text-xs">{m.endDate}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* Actions required */}
       {unresolvedActions.length > 0 && (
