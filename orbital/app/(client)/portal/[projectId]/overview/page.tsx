@@ -15,6 +15,7 @@ function schedulePercent(sow: { startDate: string; endDate: string }): number {
   if (!sow.startDate || !sow.endDate) return 0
   const start = new Date(sow.startDate).getTime()
   const end = new Date(sow.endDate).getTime()
+  if (end - start <= 0) return 0
   return Math.min(100, Math.round(((Date.now() - start) / (end - start)) * 100))
 }
 
@@ -22,6 +23,7 @@ function scheduleDays(sow: { startDate: string; endDate: string }): { elapsed: n
   if (!sow.startDate || !sow.endDate) return { elapsed: 0, total: 0 }
   const start = new Date(sow.startDate).getTime()
   const end = new Date(sow.endDate).getTime()
+  if (end - start <= 0) return { elapsed: 0, total: 0 }
   const now = Date.now()
   const total = Math.round((end - start) / 86_400_000)
   const elapsed = Math.min(total, Math.max(0, Math.round((now - start) / 86_400_000)))
