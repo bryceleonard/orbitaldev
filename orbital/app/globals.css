@@ -118,6 +118,36 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+.orbital {
+  --background: #161228;
+  --foreground: #f4eeff;
+  --card: #1e1a35;
+  --card-foreground: #f4eeff;
+  --popover: #1e1a35;
+  --popover-foreground: #f4eeff;
+  --primary: #fad542;
+  --primary-foreground: #0f0c1a;
+  --secondary: #2a2548;
+  --secondary-foreground: #f4eeff;
+  --muted: #2a2548;
+  --muted-foreground: #bfb3db;
+  --accent: #2a2548;
+  --accent-foreground: #f4eeff;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: rgba(250, 213, 66, 0.4);
+  --sidebar: #0f0c1a;
+  --sidebar-foreground: #f4eeff;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-accent: #1e1a35;
+  --sidebar-accent-foreground: #f4eeff;
+  --sidebar-primary: #fad542;
+  --sidebar-primary-foreground: #0f0c1a;
+  --sidebar-ring: rgba(250, 213, 66, 0.4);
+  --font-sans: var(--font-bricolage);
+  --font-mono: var(--font-jetbrains);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
