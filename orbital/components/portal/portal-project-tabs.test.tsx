@@ -1,28 +1,28 @@
 import { render, screen } from '@testing-library/react'
-import { vi } from 'vitest'
+import { vi, test, expect } from 'vitest'
 import type { TrackerBoard } from '@/lib/types'
 
 vi.mock('next/navigation', () => ({
-  usePathname: vi.fn(() => '/portal/p1/status'),
+  usePathname: vi.fn(() => '/portal/p1/overview'),
   useParams: vi.fn(() => ({ projectId: 'p1' })),
 }))
 
 const adoBoard: TrackerBoard = {
   id: 'b1', label: 'Alpha', type: 'ado',
-  adoOrgUrl: '', adoProject: '', adoPat: '', adoTeam: '', beadsRepo: '', beadsBranch: 'main',
+  adoOrgUrl: '', adoProject: '', adoTeam: '', beadsRepo: '', beadsBranch: 'main',
 }
 const beadsBoard: TrackerBoard = {
   id: 'b2', label: 'Issues', type: 'beads',
-  adoOrgUrl: '', adoProject: '', adoPat: '', adoTeam: '', beadsRepo: 'repo', beadsBranch: 'main',
+  adoOrgUrl: '', adoProject: '', adoTeam: '', beadsRepo: 'repo', beadsBranch: 'main',
 }
 
 test('renders static tabs without boards', async () => {
   const { PortalProjectTabs } = await import('./portal-project-tabs')
   render(<PortalProjectTabs projectId="p1" trackerBoards={[]} />)
-  for (const label of ['Overview', 'Status', 'Documents', 'Links']) {
+  for (const label of ['Overview', 'Milestones', 'Documents', 'Links']) {
     expect(screen.getByText(label)).toBeInTheDocument()
   }
-  expect(screen.queryByText('ADO')).not.toBeInTheDocument()
+  expect(screen.queryByText('Status')).not.toBeInTheDocument()
 })
 
 test('renders board tab with board label', async () => {
@@ -45,8 +45,8 @@ test('board tab links to /portal/[id]/boards/[boardId]', async () => {
   expect(link).toHaveAttribute('href', '/portal/p1/boards/b1')
 })
 
-test('active tab has aria-current', async () => {
+test('overview tab has aria-current when on overview path', async () => {
   const { PortalProjectTabs } = await import('./portal-project-tabs')
   render(<PortalProjectTabs projectId="p1" trackerBoards={[]} />)
-  expect(screen.getByRole('link', { name: /status/i })).toHaveAttribute('aria-current', 'page')
+  expect(screen.getByRole('link', { name: /overview/i })).toHaveAttribute('aria-current', 'page')
 })

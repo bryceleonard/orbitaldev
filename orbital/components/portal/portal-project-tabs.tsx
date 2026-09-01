@@ -4,12 +4,13 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import type { TrackerBoard } from '@/lib/types'
 
-const STATIC_TABS = [
-  { label: 'Overview',    segment: 'overview' },
-  { label: 'Status',      segment: 'status' },
-  { label: 'Milestones',  segment: 'milestones' },
-  { label: 'Documents',   segment: 'documents' },
-  { label: 'Links',       segment: 'links' },
+const TABS_BEFORE_BOARDS = [
+  { label: 'Overview',   segment: 'overview' },
+  { label: 'Milestones', segment: 'milestones' },
+]
+const TABS_AFTER_BOARDS = [
+  { label: 'Documents', segment: 'documents' },
+  { label: 'Links',     segment: 'links' },
 ]
 
 interface Props {
@@ -22,24 +23,26 @@ export function PortalProjectTabs({ projectId, trackerBoards }: Props) {
 
   function tabClass(active: boolean) {
     return cn(
-      'whitespace-nowrap px-4 py-3 text-sm border-b-2 -mb-px transition-colors',
+      'whitespace-nowrap px-4 py-3 font-mono text-[11px] uppercase tracking-[0.12em] border-b-2 -mb-px transition-colors',
       active
-        ? 'border-primary font-medium text-primary'
+        ? 'border-[#fad542] text-foreground'
         : 'border-transparent text-muted-foreground hover:text-foreground',
+    )
+  }
+
+  function renderTab({ label, segment }: { label: string; segment: string }) {
+    const href = `/portal/${projectId}/${segment}`
+    const active = pathname.endsWith(`/${segment}`)
+    return (
+      <Link key={segment} href={href} aria-current={active ? 'page' : undefined} className={tabClass(active)}>
+        {label}
+      </Link>
     )
   }
 
   return (
     <nav className="flex border-b overflow-x-auto">
-      {STATIC_TABS.slice(0, 3).map(({ label, segment }) => {
-        const href = `/portal/${projectId}/${segment}`
-        const active = pathname.endsWith(`/${segment}`)
-        return (
-          <Link key={segment} href={href} aria-current={active ? 'page' : undefined} className={tabClass(active)}>
-            {label}
-          </Link>
-        )
-      })}
+      {TABS_BEFORE_BOARDS.map(renderTab)}
       {trackerBoards.map((board) => {
         const href = `/portal/${projectId}/boards/${board.id}`
         const active = pathname.includes(`/boards/${board.id}`)
@@ -49,15 +52,7 @@ export function PortalProjectTabs({ projectId, trackerBoards }: Props) {
           </Link>
         )
       })}
-      {STATIC_TABS.slice(3).map(({ label, segment }) => {
-        const href = `/portal/${projectId}/${segment}`
-        const active = pathname.endsWith(`/${segment}`)
-        return (
-          <Link key={segment} href={href} aria-current={active ? 'page' : undefined} className={tabClass(active)}>
-            {label}
-          </Link>
-        )
-      })}
+      {TABS_AFTER_BOARDS.map(renderTab)}
     </nav>
   )
 }
