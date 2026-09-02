@@ -58,8 +58,6 @@ const MILESTONE_STATUS_CLASS: Record<MilestoneStatus, string> = {
   completed:   'bg-green-100 text-green-800 border-green-200',
 }
 
-const WIP_STATUSES = new Set(['in_progress', 'in_review', 'rework', 'blocked'])
-const QUEUED_STATUSES = new Set(['open', 'pinned', 'deferred'])
 
 function SectionLabel({ children }: { children: string }) {
   return (
@@ -108,9 +106,6 @@ export default function PortalOverviewPage() {
   const openRisks = risks.filter((r) => r.status === 'open')
   const sortedMilestones = [...milestones].sort((a, b) => a.startDate.localeCompare(b.startDate))
 
-  const inProgressCount = beadsIssues.filter((i) => WIP_STATUSES.has(i.status)).length
-  const queuedCount = beadsIssues.filter((i) => QUEUED_STATUSES.has(i.status)).length
-  const completedCount = beadsIssues.filter((i) => i.status === 'closed').length
   const hasBeadsData = beadsIssues.length > 0
 
   return (
@@ -169,35 +164,6 @@ export default function PortalOverviewPage() {
             </div>
           </section>
 
-          {/* Risks */}
-          <section>
-            <SectionLabel>Risks</SectionLabel>
-            <div className="bg-card border rounded-md p-6">
-              {openRisks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No open risks.</p>
-              ) : (
-                <ul className="flex flex-col gap-3 max-h-64 overflow-y-auto pr-1">
-                  {openRisks.map((r) => (
-                    <li key={r.id} className="flex items-start gap-2">
-                      <Badge
-                        variant="outline"
-                        className={`shrink-0 ${SEVERITY_COLOR[r.severity] ?? ''}`}
-                      >
-                        {r.severity.toUpperCase()}
-                      </Badge>
-                      <div>
-                        <p className="text-sm font-medium leading-snug">{r.title}</p>
-                        {r.description && (
-                          <p className="text-xs text-muted-foreground">{r.description}</p>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
-
           {/* Milestones */}
           {milestones.length > 0 && (
             <section>
@@ -233,21 +199,38 @@ export default function PortalOverviewPage() {
           )}
         </div>
 
-        {/* Right column — Velocity + Bead counts */}
-        {hasBeadsData && (
-          <div className="flex flex-col gap-6">
-            <BeadsVelocity issues={beadsIssues} maxWeeks={4} />
+        {/* Right column — Velocity + Risks */}
+        <div className="flex flex-col gap-6">
+          {hasBeadsData && <BeadsVelocity issues={beadsIssues} maxWeeks={4} />}
 
-            <section>
-              <SectionLabel>Work Items</SectionLabel>
-              <div className="flex flex-col gap-3">
-                <BeadStatCard label="In Progress" count={inProgressCount} />
-                <BeadStatCard label="Queued" count={queuedCount} />
-                <BeadStatCard label="Completed" count={completedCount} />
-              </div>
-            </section>
-          </div>
-        )}
+          <section>
+            <SectionLabel>Risks</SectionLabel>
+            <div className="bg-card border rounded-md p-4">
+              {openRisks.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No open risks.</p>
+              ) : (
+                <ul className="flex flex-col gap-3">
+                  {openRisks.map((r) => (
+                    <li key={r.id} className="flex items-start gap-2">
+                      <Badge
+                        variant="outline"
+                        className={`shrink-0 ${SEVERITY_COLOR[r.severity] ?? ''}`}
+                      >
+                        {r.severity.toUpperCase()}
+                      </Badge>
+                      <div>
+                        <p className="text-sm font-medium leading-snug">{r.title}</p>
+                        {r.description && (
+                          <p className="text-xs text-muted-foreground">{r.description}</p>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   )
@@ -283,11 +266,3 @@ function MetricCard({
   )
 }
 
-function BeadStatCard({ label, count }: { label: string; count: number }) {
-  return (
-    <div className="bg-card border rounded-md px-4 py-3 flex items-center justify-between">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <span className="text-xl font-bold tabular-nums">{count}</span>
-    </div>
-  )
-}
