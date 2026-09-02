@@ -72,12 +72,22 @@ export async function POST(req: NextRequest) {
   const fileRef = adminDb.collection(`orgs/${orgId}/projects/${projectId}/files`).doc()
   const storagePath = `${orgId}/${projectId}/${fileRef.id}-${safeName}`
 
-  const gcsFile = getStorage().bucket().file(storagePath)
-  const [uploadUrl] = await gcsFile.getSignedUrl({
-    action: 'write',
-    expires: Date.now() + 15 * 60 * 1000,
-    contentType: resolvedMime,
-  })
+  let uploadUrl: string
+  try {
+    const bucket = getStorage().bucket()
+    console.log('[upload] bucket name:', bucket.name)
+    const gcsFile = bucket.file(storagePath)
+    const [url] = await gcsFile.getSignedUrl({
+      action: 'write',
+      expires: Date.now() + 15 * 60 * 1000,
+      contentType: resolvedMime,
+    })
+    uploadUrl = url
+    console.log('[upload] signed URL obtained')
+  } catch (err) {
+    console.error('[upload] getSignedUrl failed:', err)
+    return NextResponse.json({ error: 'Could not generate upload URL' }, { status: 500 })
+  }
 
   const buffer = Buffer.from(await file.arrayBuffer())
   const putRes = await fetch(uploadUrl, {
@@ -86,6 +96,8 @@ export async function POST(req: NextRequest) {
     body: buffer,
   })
   if (!putRes.ok) {
+    const body = await putRes.text()
+    console.error('[upload] PUT failed', putRes.status, body)
     await fileRef.delete()
     return NextResponse.json({ error: 'Storage upload failed' }, { status: 500 })
   }
