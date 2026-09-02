@@ -57,9 +57,16 @@ export async function GET(
     return NextResponse.json({ error: 'Not found or access denied' }, { status: 404 })
   }
 
-  const [contents] = await getStorage().bucket(BUCKET).file(storagePath).download()
+  const gcsFile = getStorage().bucket(BUCKET).file(storagePath)
+  const [downloadUrl] = await gcsFile.getSignedUrl({
+    action: 'read',
+    expires: Date.now() + 5 * 60 * 1000,
+  })
 
-  return new NextResponse(contents.buffer as ArrayBuffer, {
+  const gcsRes = await fetch(downloadUrl)
+  if (!gcsRes.ok) return NextResponse.json({ error: 'File not found in storage' }, { status: 404 })
+
+  return new NextResponse(gcsRes.body, {
     headers: {
       'Content-Type': mimeType,
       'Content-Disposition': `attachment; filename="${fileName}"`,

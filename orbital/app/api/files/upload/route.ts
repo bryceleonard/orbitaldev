@@ -73,8 +73,23 @@ export async function POST(req: NextRequest) {
   const fileRef = adminDb.collection(`orgs/${orgId}/projects/${projectId}/files`).doc()
   const storagePath = `${orgId}/${projectId}/${fileRef.id}-${safeName}`
 
+  const gcsFile = getStorage().bucket(BUCKET).file(storagePath)
+  const [uploadUrl] = await gcsFile.getSignedUrl({
+    action: 'write',
+    expires: Date.now() + 15 * 60 * 1000,
+    contentType: resolvedMime,
+  })
+
   const buffer = Buffer.from(await file.arrayBuffer())
-  await getStorage().bucket(BUCKET).file(storagePath).save(buffer, { contentType: resolvedMime })
+  const putRes = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': resolvedMime },
+    body: buffer,
+  })
+  if (!putRes.ok) {
+    await fileRef.delete()
+    return NextResponse.json({ error: 'Storage upload failed' }, { status: 500 })
+  }
 
   await fileRef.set({
     name: safeName,
