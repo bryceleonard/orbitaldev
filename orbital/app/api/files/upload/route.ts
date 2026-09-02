@@ -2,10 +2,11 @@ export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
-import { getStorage } from 'firebase-admin/storage'
+import { getApp } from 'firebase-admin/app'
 
 const COOKIE = process.env.SESSION_COOKIE_NAME ?? '__session'
 const MAX_SIZE_BYTES = 100 * 1024 * 1024 // 100 MB
+const BUCKET = process.env.FIREBASE_STORAGE_BUCKET!
 
 const ALLOWED_MIME_TYPES = new Set([
   'application/pdf',
@@ -72,34 +73,25 @@ export async function POST(req: NextRequest) {
   const fileRef = adminDb.collection(`orgs/${orgId}/projects/${projectId}/files`).doc()
   const storagePath = `${orgId}/${projectId}/${fileRef.id}-${safeName}`
 
-  let uploadUrl: string
-  try {
-    const bucket = getStorage().bucket()
-    console.log('[upload] bucket name:', bucket.name)
-    const gcsFile = bucket.file(storagePath)
-    const [url] = await gcsFile.getSignedUrl({
-      action: 'write',
-      expires: Date.now() + 15 * 60 * 1000,
-      contentType: resolvedMime,
-    })
-    uploadUrl = url
-    console.log('[upload] signed URL obtained')
-  } catch (err) {
-    console.error('[upload] getSignedUrl failed:', err)
-    return NextResponse.json({ error: 'Could not generate upload URL' }, { status: 500 })
-  }
-
+  const { access_token } = await getApp().options.credential!.getAccessToken()
   const buffer = Buffer.from(await file.arrayBuffer())
-  const putRes = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: { 'Content-Type': resolvedMime },
-    body: buffer,
-  })
+
+  const putRes = await fetch(
+    `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o?name=${encodeURIComponent(storagePath)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${access_token}`,
+        'Content-Type': resolvedMime,
+      },
+      body: buffer,
+    }
+  )
+
   if (!putRes.ok) {
-    const body = await putRes.text()
-    console.error('[upload] PUT failed', putRes.status, body)
-    await fileRef.delete()
-    return NextResponse.json({ error: `GCS PUT ${putRes.status}: ${body}` }, { status: 500 })
+    const errBody = await putRes.text()
+    console.error('[upload] Firebase Storage upload failed', putRes.status, errBody)
+    return NextResponse.json({ error: `Upload failed ${putRes.status}: ${errBody}` }, { status: 500 })
   }
 
   await fileRef.set({
