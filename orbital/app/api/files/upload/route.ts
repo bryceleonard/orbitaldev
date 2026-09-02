@@ -76,22 +76,24 @@ export async function POST(req: NextRequest) {
   const { access_token } = await getApp().options.credential!.getAccessToken()
   const buffer = Buffer.from(await file.arrayBuffer())
 
-  const putRes = await fetch(
-    `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o?uploadType=media&name=${encodeURIComponent(storagePath)}`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${access_token}`,
-        'Content-Type': resolvedMime,
-      },
-      body: buffer,
-    }
-  )
+  const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o?uploadType=media&name=${encodeURIComponent(storagePath)}`
+  console.log('[upload] bucket env:', BUCKET)
+  console.log('[upload] url:', uploadUrl)
+  console.log('[upload] token prefix:', access_token?.slice(0, 20))
+
+  const putRes = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${access_token}`,
+      'Content-Type': resolvedMime,
+    },
+    body: buffer,
+  })
 
   if (!putRes.ok) {
     const errBody = await putRes.text()
     console.error('[upload] Firebase Storage upload failed', putRes.status, errBody)
-    return NextResponse.json({ error: `Upload failed ${putRes.status}: ${errBody}` }, { status: 500 })
+    return NextResponse.json({ error: `Upload failed ${putRes.status}: ${errBody}`, url: uploadUrl, bucket: BUCKET }, { status: 500 })
   }
 
   await fileRef.set({
