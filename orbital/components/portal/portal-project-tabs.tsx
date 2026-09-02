@@ -22,7 +22,7 @@ export function PortalProjectTabs({ projectId }: { projectId: string }) {
   }
 
   return (
-    <nav className="flex border-b overflow-x-auto">
+    <nav className="flex border-b">
       {TABS.map(({ label, segment }) => {
         const href = `/portal/${projectId}/${segment}`
         const active = pathname.endsWith(`/${segment}`)

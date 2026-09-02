@@ -11,7 +11,7 @@ export default function PortalProjectLayout({ children }: { children: React.Reac
 
   return (
     <div className="flex flex-col">
-      <div className="border-b px-8 pt-6 pb-0 print:hidden">
+      <div className="px-8 pt-6 pb-0 print:hidden">
         <PortalProjectTabs projectId={projectId} />
       </div>
       <div className="px-[50px] py-8 print:p-0">
