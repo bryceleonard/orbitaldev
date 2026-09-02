@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     const body = await putRes.text()
     console.error('[upload] PUT failed', putRes.status, body)
     await fileRef.delete()
-    return NextResponse.json({ error: 'Storage upload failed' }, { status: 500 })
+    return NextResponse.json({ error: `GCS PUT ${putRes.status}: ${body}` }, { status: 500 })
   }
 
   await fileRef.set({
