@@ -145,14 +145,16 @@ export function BeadsStatusView({
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
             Completed
           </h2>
-          <div className="grid grid-cols-2 gap-4">
-            {closedByType.map(({ type, count }) => (
-              <div key={type}>
-                <p className="text-3xl font-bold tracking-tight">{count}</p>
-                <p className="text-xs text-muted-foreground capitalize mt-0.5">{type}s</p>
-              </div>
-            ))}
-          </div>
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-border">
+              {closedByType.map(({ type, count }) => (
+                <tr key={type}>
+                  <td className="py-2 capitalize text-muted-foreground">{type}s</td>
+                  <td className="py-2 text-right font-semibold">{count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         <div className="rounded-xl border bg-card p-5 pt-4">
