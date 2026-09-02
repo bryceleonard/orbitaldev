@@ -133,105 +133,103 @@ export default function PortalOverviewPage() {
         )}
       </section>
 
-      {/* Two-column layout */}
+      {/* Two-column layout — Health + Velocity */}
       <div className="grid grid-cols-[7fr_3fr] gap-8 items-start">
-        {/* Left column — Health + Risks + Milestones */}
-        <div className="flex flex-col gap-8">
-          {/* Health metrics */}
-          <section>
-            <SectionLabel>Health</SectionLabel>
-            <div className="grid grid-cols-2 gap-4">
-              <MetricCard
-                label="Schedule"
-                percent={schedulePct}
-                status={project.statusHeader.scheduleStatus}
-                centerLabel={`${schedulePct}%`}
-                centerSub="elapsed"
-                metricLine={`${daysElapsed} of ${totalDays} days`}
-              />
-              <MetricCard
-                label="Budget"
-                percent={budgetPct}
-                status={project.statusHeader.budgetStatus}
-                centerLabel={project.sow.totalHours ? `${budgetPct}%` : '—'}
-                centerSub="of budget"
-                metricLine={
-                  project.sow.totalHours
-                    ? `${hoursConsumed} of ${project.sow.totalHours} hrs`
-                    : 'No budget set'
-                }
-              />
-            </div>
-          </section>
+        <section>
+          <SectionLabel>Health</SectionLabel>
+          <div className="grid grid-cols-2 gap-4">
+            <MetricCard
+              label="Schedule"
+              percent={schedulePct}
+              status={project.statusHeader.scheduleStatus}
+              centerLabel={`${schedulePct}%`}
+              centerSub="elapsed"
+              metricLine={`${daysElapsed} of ${totalDays} days`}
+            />
+            <MetricCard
+              label="Budget"
+              percent={budgetPct}
+              status={project.statusHeader.budgetStatus}
+              centerLabel={project.sow.totalHours ? `${budgetPct}%` : '—'}
+              centerSub="of budget"
+              metricLine={
+                project.sow.totalHours
+                  ? `${hoursConsumed} of ${project.sow.totalHours} hrs`
+                  : 'No budget set'
+              }
+            />
+          </div>
+        </section>
 
-          {/* Milestones */}
-          {milestones.length > 0 && (
-            <section>
-              <SectionLabel>Milestones</SectionLabel>
-              <div className="flex flex-col gap-6">
-                <MilestonesGantt milestones={milestones} showTooltips />
-                <table className="w-full text-sm border rounded-md overflow-hidden">
-                  <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="text-left px-4 py-2 font-medium text-muted-foreground">Milestone</th>
-                      <th className="text-left px-4 py-2 font-medium text-muted-foreground">Status</th>
-                      <th className="text-left px-4 py-2 font-medium text-muted-foreground">Start</th>
-                      <th className="text-left px-4 py-2 font-medium text-muted-foreground">End</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedMilestones.map((m, i) => (
-                      <tr key={m.id} className={i % 2 === 0 ? '' : 'bg-muted/20'}>
-                        <td className="px-4 py-2 font-medium">{m.name}</td>
-                        <td className="px-4 py-2">
-                          <Badge variant="outline" className={MILESTONE_STATUS_CLASS[m.status]}>
-                            {MILESTONE_STATUS_LABEL[m.status]}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-2 text-muted-foreground font-mono text-xs">{m.startDate}</td>
-                        <td className="px-4 py-2 text-muted-foreground font-mono text-xs">{m.endDate}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+        {hasBeadsData && (
+          <div className="rounded-xl border bg-card p-5 pt-4">
+            <BeadsVelocity issues={beadsIssues} maxWeeks={4} />
+          </div>
+        )}
+      </div>
+
+      {/* Risks — full width */}
+      <section>
+        <SectionLabel>Risks</SectionLabel>
+        <div className="bg-card border rounded-md p-4">
+          {openRisks.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No open risks.</p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-border">
+              {openRisks.map((r) => (
+                <li key={r.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                  <Badge
+                    variant="outline"
+                    className={`shrink-0 mt-0.5 ${SEVERITY_COLOR[r.severity] ?? ''}`}
+                  >
+                    {r.severity.toUpperCase()}
+                  </Badge>
+                  <div>
+                    <p className="text-sm font-medium leading-snug">{r.title}</p>
+                    {r.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{r.description}</p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
+      </section>
 
-        {/* Right column — Velocity + Risks */}
-        <div className="flex flex-col gap-6">
-          {hasBeadsData && <BeadsVelocity issues={beadsIssues} maxWeeks={4} />}
-
-          <section>
-            <SectionLabel>Risks</SectionLabel>
-            <div className="bg-card border rounded-md p-4">
-              {openRisks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No open risks.</p>
-              ) : (
-                <ul className="flex flex-col gap-3">
-                  {openRisks.map((r) => (
-                    <li key={r.id} className="flex items-start gap-2">
-                      <Badge
-                        variant="outline"
-                        className={`shrink-0 ${SEVERITY_COLOR[r.severity] ?? ''}`}
-                      >
-                        {r.severity.toUpperCase()}
+      {/* Milestones — full width */}
+      {milestones.length > 0 && (
+        <section>
+          <SectionLabel>Milestones</SectionLabel>
+          <div className="flex flex-col gap-6">
+            <MilestonesGantt milestones={milestones} showTooltips />
+            <table className="w-full text-sm border rounded-md overflow-hidden">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Milestone</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Start</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">End</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedMilestones.map((m, i) => (
+                  <tr key={m.id} className={i % 2 === 0 ? '' : 'bg-muted/20'}>
+                    <td className="px-4 py-2 font-medium">{m.name}</td>
+                    <td className="px-4 py-2">
+                      <Badge variant="outline" className={MILESTONE_STATUS_CLASS[m.status]}>
+                        {MILESTONE_STATUS_LABEL[m.status]}
                       </Badge>
-                      <div>
-                        <p className="text-sm font-medium leading-snug">{r.title}</p>
-                        {r.description && (
-                          <p className="text-xs text-muted-foreground">{r.description}</p>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
-        </div>
-      </div>
+                    </td>
+                    <td className="px-4 py-2 text-muted-foreground font-mono text-xs">{m.startDate}</td>
+                    <td className="px-4 py-2 text-muted-foreground font-mono text-xs">{m.endDate}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </div>
   )
 }
