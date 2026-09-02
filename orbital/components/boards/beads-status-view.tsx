@@ -162,50 +162,6 @@ export function BeadsStatusView({
         </div>
       </div>
 
-      {/* Workstreams / epics rollup */}
-      {epicsWithChildren.length > 0 && (
-        <section>
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-            Workstreams
-          </h2>
-          <div className="flex flex-col gap-2">
-            {epicsWithChildren.map((epic) => {
-              const { closed: ec, total: et, pct: ep } = epicProgress(epic.id, issues)
-              const isExpanded = expandedEpicId === epic.id
-              const children = childrenOf(epic.id, issues)
-              return (
-                <div key={epic.id} className="rounded-lg border overflow-hidden">
-                  <button
-                    onClick={() => setExpandedEpicId(isExpanded ? null : epic.id)}
-                    className="w-full flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
-                  >
-                    <span className="text-muted-foreground w-3 flex-shrink-0 text-xs">
-                      {isExpanded ? '▾' : '▸'}
-                    </span>
-                    <span className="flex-1 min-w-0 text-sm font-medium truncate">{epic.title}</span>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">{ec}/{et}</span>
-                    <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden flex-shrink-0">
-                      <div
-                        className="h-full rounded-full bg-primary transition-all"
-                        style={{ width: `${ep}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-semibold w-8 text-right">{ep}%</span>
-                  </button>
-                  {isExpanded && (
-                    <div className="border-t divide-y divide-border bg-muted/20">
-                      {children.map((child) => (
-                        <BeadRow key={child.id} bead={child} onClick={() => setSelected(child)} />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
-
       {/* Blocked */}
       {blocked.length > 0 && (
         <Section title="Blocked" count={blocked.length} accent="var(--destructive)">
@@ -222,6 +178,28 @@ export function BeadsStatusView({
             <BeadRow key={b.id} bead={b} onClick={() => setSelected(b)} />
           ))}
         </Section>
+      )}
+
+      {/* Open / queued */}
+      {open.length > 0 && (
+        <section>
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+            Queued <span className="text-foreground">{open.length}</span>
+          </h2>
+          <div className="rounded-lg border divide-y divide-border">
+            {visibleOpen.map((b) => (
+              <BeadRow key={b.id} bead={b} onClick={() => setSelected(b)} />
+            ))}
+          </div>
+          {open.length > 8 && (
+            <button
+              onClick={() => setShowAllOpen(!showAllOpen)}
+              className="mt-2 text-xs text-primary hover:underline"
+            >
+              {showAllOpen ? 'Show less' : `Show all ${open.length}`}
+            </button>
+          )}
+        </section>
       )}
 
       {/* Recently Completed */}
@@ -282,25 +260,47 @@ export function BeadsStatusView({
         )
       })()}
 
-      {/* Open / queued */}
-      {open.length > 0 && (
+      {/* Workstreams / epics rollup */}
+      {epicsWithChildren.length > 0 && (
         <section>
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-            Queued <span className="text-foreground">{open.length}</span>
+            Workstreams
           </h2>
-          <div className="rounded-lg border divide-y divide-border">
-            {visibleOpen.map((b) => (
-              <BeadRow key={b.id} bead={b} onClick={() => setSelected(b)} />
-            ))}
+          <div className="flex flex-col gap-2">
+            {epicsWithChildren.map((epic) => {
+              const { closed: ec, total: et, pct: ep } = epicProgress(epic.id, issues)
+              const isExpanded = expandedEpicId === epic.id
+              const children = childrenOf(epic.id, issues)
+              return (
+                <div key={epic.id} className="rounded-lg border overflow-hidden">
+                  <button
+                    onClick={() => setExpandedEpicId(isExpanded ? null : epic.id)}
+                    className="w-full flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
+                  >
+                    <span className="text-muted-foreground w-3 flex-shrink-0 text-xs">
+                      {isExpanded ? '▾' : '▸'}
+                    </span>
+                    <span className="flex-1 min-w-0 text-sm font-medium truncate">{epic.title}</span>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">{ec}/{et}</span>
+                    <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{ width: `${ep}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold w-8 text-right">{ep}%</span>
+                  </button>
+                  {isExpanded && (
+                    <div className="border-t divide-y divide-border bg-muted/20">
+                      {children.map((child) => (
+                        <BeadRow key={child.id} bead={child} onClick={() => setSelected(child)} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
-          {open.length > 8 && (
-            <button
-              onClick={() => setShowAllOpen(!showAllOpen)}
-              className="mt-2 text-xs text-primary hover:underline"
-            >
-              {showAllOpen ? 'Show less' : `Show all ${open.length}`}
-            </button>
-          )}
         </section>
       )}
 
