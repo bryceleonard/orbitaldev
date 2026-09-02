@@ -1,6 +1,5 @@
 'use client'
 import { useParams } from 'next/navigation'
-import { Printer } from 'lucide-react'
 import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
 import { PortalProjectTabs } from '@/components/portal/portal-project-tabs'
@@ -13,15 +12,6 @@ export default function PortalProjectLayout({ children }: { children: React.Reac
   return (
     <div className="flex flex-col">
       <div className="border-b px-8 pt-6 pb-0 print:hidden">
-        <div className="flex items-center justify-end mb-4">
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Printer className="h-4 w-4" />
-            Export PDF
-          </button>
-        </div>
         <PortalProjectTabs projectId={projectId} />
       </div>
       <div className="px-[50px] py-8 print:p-0">
