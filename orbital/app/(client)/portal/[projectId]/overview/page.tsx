@@ -114,7 +114,7 @@ export default function PortalOverviewPage() {
   const hasBeadsData = beadsIssues.length > 0
 
   return (
-    <div className="flex flex-col gap-8 max-w-7xl">
+    <div className="flex flex-col gap-8">
       {/* Project header */}
       <section className="flex flex-col gap-3">
         <div>

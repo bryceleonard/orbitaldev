@@ -25,11 +25,13 @@ export default function PortalProjectLayout({ children }: { children: React.Reac
         <PortalProjectTabs projectId={projectId} />
       </div>
       <div className="p-8 print:p-0">
-        <div className="hidden print:block mb-6">
-          <p className="text-xs text-muted-foreground">Orbital — Client Portal</p>
-          <h1 className="text-2xl font-semibold">{project?.name ?? '—'}</h1>
+        <div className="max-w-5xl mx-auto">
+          <div className="hidden print:block mb-6">
+            <p className="text-xs text-muted-foreground">Orbital — Client Portal</p>
+            <h1 className="text-2xl font-semibold">{project?.name ?? '—'}</h1>
+          </div>
+          {children}
         </div>
-        {children}
       </div>
     </div>
   )

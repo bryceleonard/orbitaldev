@@ -96,6 +96,7 @@ export function BeadsStatusView({
   const [selected, setSelected] = useState<BeadsIssue | null>(null)
   const [expandedEpicId, setExpandedEpicId] = useState<string | null>(null)
   const [closedTypeFilter, setClosedTypeFilter] = useState<string | null>(null)
+  const [closedSearch, setClosedSearch] = useState('')
   const [showAllClosed, setShowAllClosed] = useState(false)
   const [showAllOpen, setShowAllOpen] = useState(false)
 
@@ -205,43 +206,54 @@ export function BeadsStatusView({
       {/* Recently Completed */}
       {closed.length > 0 && (() => {
         const closedTypes = [...new Set(closed.map((b) => b.issue_type ?? b.type ?? 'task'))]
-        const filteredClosed = closedTypeFilter
-          ? closed.filter((b) => (b.issue_type ?? b.type ?? 'task') === closedTypeFilter)
-          : closed
+        const filteredClosed = closed.filter((b) => {
+          if (closedTypeFilter && (b.issue_type ?? b.type ?? 'task') !== closedTypeFilter) return false
+          if (closedSearch && !b.title.toLowerCase().includes(closedSearch.toLowerCase())) return false
+          return true
+        })
         const visibleFiltered = showAllClosed ? filteredClosed : filteredClosed.slice(0, 8)
         return (
           <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <div className="flex items-center justify-between mb-3 gap-3">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
                 Completed <span className="text-foreground">{filteredClosed.length}</span>
               </h2>
-              {closedTypes.length > 1 && (
-                <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                  <button
-                    onClick={() => { setClosedTypeFilter(null); setShowAllClosed(false) }}
-                    className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border transition-colors ${
-                      closedTypeFilter === null
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground'
-                    }`}
-                  >
-                    All
-                  </button>
-                  {closedTypes.map((t) => (
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                <input
+                  type="search"
+                  placeholder="Search…"
+                  value={closedSearch}
+                  onChange={(e) => { setClosedSearch(e.target.value); setShowAllClosed(false) }}
+                  className="h-6 rounded-md border border-border bg-transparent px-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring w-36"
+                />
+                {closedTypes.length > 1 && (
+                  <>
                     <button
-                      key={t}
-                      onClick={() => { setClosedTypeFilter(t); setShowAllClosed(false) }}
-                      className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border transition-colors capitalize ${
-                        closedTypeFilter === t
+                      onClick={() => { setClosedTypeFilter(null); setShowAllClosed(false) }}
+                      className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border transition-colors ${
+                        closedTypeFilter === null
                           ? 'bg-primary text-primary-foreground border-primary'
                           : 'bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground'
                       }`}
                     >
-                      {t}
+                      All
                     </button>
-                  ))}
-                </div>
-              )}
+                    {closedTypes.map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => { setClosedTypeFilter(t); setShowAllClosed(false) }}
+                        className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border transition-colors capitalize ${
+                          closedTypeFilter === t
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
             </div>
             <div className="rounded-lg border divide-y divide-border">
               {visibleFiltered.map((b) => (
