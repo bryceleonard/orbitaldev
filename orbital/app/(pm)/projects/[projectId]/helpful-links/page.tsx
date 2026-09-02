@@ -29,6 +29,7 @@ export default function HelpfulLinksPage() {
         columns={[
           { key: 'label', label: 'Label', type: 'text' },
           { key: 'url', label: 'URL', type: 'text' },
+          { key: 'notes', label: 'Notes', type: 'text' },
         ]}
         rows={rows}
         canEdit={canEdit}

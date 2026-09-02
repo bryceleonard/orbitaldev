@@ -162,6 +162,7 @@ export interface HelpfulLink {
   id: string
   label: string
   url: string
+  notes?: string
 }
 
 export type MilestoneStatus = 'not_started' | 'in_progress' | 'blocked' | 'completed'

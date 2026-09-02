@@ -23,7 +23,7 @@ export default function PortalLinksPage() {
       {links.length === 0 && (
         <p className="text-muted-foreground text-sm">No links have been added yet.</p>
       )}
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-4">
         {links.map((link) => (
           <li key={link.id}>
             <a
@@ -35,6 +35,9 @@ export default function PortalLinksPage() {
               <ExternalLink className="h-4 w-4 shrink-0" />
               {link.label}
             </a>
+            {link.notes && (
+              <p className="text-xs text-muted-foreground mt-1 ml-6">{link.notes}</p>
+            )}
           </li>
         ))}
       </ul>
