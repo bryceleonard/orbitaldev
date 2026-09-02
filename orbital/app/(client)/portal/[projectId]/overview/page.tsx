@@ -245,7 +245,7 @@ function MetricCard({
 }) {
   return (
     <div className="bg-card border rounded-md p-6 flex flex-col items-center gap-4 h-full">
-      <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground self-start">
+      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground self-start">
         {label}
       </p>
       <CircularProgress percent={percent} status={status}>
