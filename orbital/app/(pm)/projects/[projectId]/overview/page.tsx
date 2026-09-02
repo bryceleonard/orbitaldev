@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/use-auth'
@@ -25,6 +25,13 @@ export default function OverviewPage() {
   const [shareOpen, setShareOpen] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  useEffect(() => {
+    if (project) {
+      setName(project.name)
+      setDescription(project.description)
+    }
+  }, [project])
+
   const isOwner = user && project ? project.members[user.uid] === 'owner' : false
   const canEdit = user && project
     ? project.members[user.uid] === 'owner' || project.members[user.uid] === 'editor'
@@ -46,7 +53,7 @@ export default function OverviewPage() {
         <Label htmlFor="proj-name">Project name</Label>
         <Input
           id="proj-name"
-          value={name || project.name}
+          value={name}
           onChange={(e) => setName(e.target.value)}
           disabled={!canEdit}
         />
@@ -55,7 +62,7 @@ export default function OverviewPage() {
         <Label htmlFor="proj-desc">Description</Label>
         <Input
           id="proj-desc"
-          value={description || project.description}
+          value={description}
           onChange={(e) => setDescription(e.target.value)}
           disabled={!canEdit}
         />

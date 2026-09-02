@@ -166,6 +166,6 @@ export async function GET(
     const fetchedAt = await writeCache(orgId, projectId, boardId, type, payload)
     return NextResponse.json({ type, payload, fetchedAt, fromCache: false })
   } catch (e) {
-    return NextResponse.json({ error: `Fetch failed: ${(e as Error).message}` }, { status: 502 })
+    return NextResponse.json({ error: 'Failed to fetch board data' }, { status: 502 })
   }
 }

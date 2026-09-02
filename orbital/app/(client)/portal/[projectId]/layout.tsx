@@ -22,7 +22,7 @@ export default function PortalProjectLayout({ children }: { children: React.Reac
             Export PDF
           </button>
         </div>
-        <PortalProjectTabs projectId={projectId} trackerBoards={project?.trackerBoards ?? []} />
+        <PortalProjectTabs projectId={projectId} />
       </div>
       <div className="p-8 print:p-0">
         <div className="hidden print:block mb-6">

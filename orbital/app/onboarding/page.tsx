@@ -1,6 +1,8 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { createOrg, joinOrg, orgExists } from '@/lib/firestore/orgs'
 import { Button } from '@/components/ui/button'
@@ -19,6 +21,7 @@ export default function OnboardingPage() {
 
   async function handleSignOut() {
     await fetch('/api/auth/signout', { method: 'POST' })
+    await signOut(auth).catch(() => {})
     router.replace('/login')
   }
 

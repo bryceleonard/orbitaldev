@@ -111,13 +111,12 @@ export function BeadsStatusView({
 
   // Epics: beads that have children — excluded from summary counts
   const epicsWithChildren = issues.filter((b) => childrenOf(b.id, issues).length > 0)
-  const parentIds = new Set(epicsWithChildren.map((e) => e.id))
 
-  // Summary counts use leaf beads only (no parents), avoiding double-counting
-  const leafIssues = issues.filter((b) => !parentIds.has(b.id))
-  const leafClosed = leafIssues.filter((b) => b.status === 'closed')
-  const total = leafIssues.length
-  const pct = total ? Math.round((leafClosed.length / total) * 100) : 0
+  const BEAD_TYPES = ['epic', 'feature', 'bug', 'task'] as const
+  const closedByType = BEAD_TYPES.map((t) => ({
+    type: t,
+    count: issues.filter((b) => b.status === 'closed' && (b.issue_type ?? b.type ?? 'task') === t).length,
+  }))
 
   const visibleClosed = showAllClosed ? closed : closed.slice(0, 8)
   const visibleOpen = showAllOpen ? open : open.slice(0, 8)
@@ -140,46 +139,26 @@ export function BeadsStatusView({
 
       {syncError && <p className="text-sm text-destructive">{syncError}</p>}
 
-      {/* Summary card */}
-      <div className="rounded-xl border bg-card p-5 flex flex-col gap-4">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-4xl font-bold tracking-tight">{pct}%</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {leafClosed.length} of {total} complete
-            </p>
-          </div>
-          <div className="flex gap-6 text-sm pt-1">
-            {wip.length > 0 && (
-              <div className="text-right">
-                <p className="text-xl font-semibold">{wip.length}</p>
-                <p className="text-xs text-muted-foreground">in progress</p>
+      {/* Top row: completed by type + velocity */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="rounded-xl border bg-card p-5">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+            Completed
+          </h2>
+          <div className="grid grid-cols-2 gap-4">
+            {closedByType.map(({ type, count }) => (
+              <div key={type}>
+                <p className="text-3xl font-bold tracking-tight">{count}</p>
+                <p className="text-xs text-muted-foreground capitalize mt-0.5">{type}s</p>
               </div>
-            )}
-            {blocked.length > 0 && (
-              <div className="text-right">
-                <p className="text-xl font-semibold text-destructive">{blocked.length}</p>
-                <p className="text-xs text-muted-foreground">blocked</p>
-              </div>
-            )}
-            {open.length > 0 && (
-              <div className="text-right">
-                <p className="text-xl font-semibold">{open.length}</p>
-                <p className="text-xs text-muted-foreground">queued</p>
-              </div>
-            )}
+            ))}
           </div>
         </div>
-        <div className="h-2 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full rounded-full bg-primary transition-all duration-500"
-            style={{ width: `${pct}%` }}
-          />
+
+        <div className="rounded-xl border bg-card p-5 pt-4">
+          <BeadsVelocity issues={issues} />
         </div>
       </div>
-
-      {/* Velocity chart */}
-      <BeadsVelocity issues={issues} />
 
       {/* Workstreams / epics rollup */}
       {epicsWithChildren.length > 0 && (

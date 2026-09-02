@@ -1,6 +1,8 @@
 'use client'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -13,6 +15,7 @@ export function PmSidebar() {
 
   async function handleSignOut() {
     await fetch('/api/auth/signout', { method: 'POST' })
+    await signOut(auth).catch(() => {})
     router.push('/login')
   }
 

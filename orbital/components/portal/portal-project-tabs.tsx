@@ -2,22 +2,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import type { TrackerBoard } from '@/lib/types'
 
-const TABS_BEFORE_BOARDS = [
-  { label: 'Overview', segment: 'overview' },
-]
-const TABS_AFTER_BOARDS = [
+const TABS = [
+  { label: 'Overview',  segment: 'overview'  },
   { label: 'Documents', segment: 'documents' },
-  { label: 'Links',     segment: 'links' },
+  { label: 'Links',     segment: 'links'     },
 ]
 
-interface Props {
-  projectId: string
-  trackerBoards: TrackerBoard[]
-}
-
-export function PortalProjectTabs({ projectId, trackerBoards }: Props) {
+export function PortalProjectTabs({ projectId }: { projectId: string }) {
   const pathname = usePathname()
 
   function tabClass(active: boolean) {
@@ -29,29 +21,17 @@ export function PortalProjectTabs({ projectId, trackerBoards }: Props) {
     )
   }
 
-  function renderTab({ label, segment }: { label: string; segment: string }) {
-    const href = `/portal/${projectId}/${segment}`
-    const active = pathname.endsWith(`/${segment}`)
-    return (
-      <Link key={segment} href={href} aria-current={active ? 'page' : undefined} className={tabClass(active)}>
-        {label}
-      </Link>
-    )
-  }
-
   return (
     <nav className="flex border-b overflow-x-auto">
-      {TABS_BEFORE_BOARDS.map(renderTab)}
-      {trackerBoards.map((board) => {
-        const href = `/portal/${projectId}/boards/${board.id}`
-        const active = pathname.includes(`/boards/${board.id}`)
+      {TABS.map(({ label, segment }) => {
+        const href = `/portal/${projectId}/${segment}`
+        const active = pathname.endsWith(`/${segment}`)
         return (
-          <Link key={board.id} href={href} aria-current={active ? 'page' : undefined} className={tabClass(active)}>
-            {board.label}
+          <Link key={segment} href={href} aria-current={active ? 'page' : undefined} className={tabClass(active)}>
+            {label}
           </Link>
         )
       })}
-      {TABS_AFTER_BOARDS.map(renderTab)}
     </nav>
   )
 }

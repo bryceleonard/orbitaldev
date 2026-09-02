@@ -66,15 +66,18 @@ function VelocityTooltip({
   )
 }
 
-export function BeadsVelocity({ issues }: { issues: BeadsIssue[] }) {
-  const data = useMemo(() => buildVelocityData(issues), [issues])
+export function BeadsVelocity({ issues, maxWeeks }: { issues: BeadsIssue[]; maxWeeks?: number }) {
+  const data = useMemo(() => {
+    const all = buildVelocityData(issues)
+    return maxWeeks ? all.slice(-maxWeeks) : all
+  }, [issues, maxWeeks])
 
   if (data.length < 2) return null
 
   const avg = Math.round(data.reduce((s, d) => s + d.count, 0) / data.length)
 
   return (
-    <section>
+    <>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Velocity
@@ -83,33 +86,31 @@ export function BeadsVelocity({ issues }: { issues: BeadsIssue[] }) {
           avg <span className="text-foreground font-medium">{avg}</span> / week
         </span>
       </div>
-      <div className="rounded-xl border bg-card p-4 pt-5">
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-            <XAxis
-              dataKey="label"
-              tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
-              tickLine={false}
-              axisLine={false}
-              allowDecimals={false}
-            />
-            <Tooltip content={<VelocityTooltip />} cursor={{ fill: 'var(--muted)', opacity: 0.4 }} />
-            <ReferenceLine
-              y={avg}
-              stroke="var(--muted-foreground)"
-              strokeDasharray="4 3"
-              strokeOpacity={0.5}
-            />
-            <Bar dataKey="count" fill="var(--primary)" radius={[3, 3, 0, 0]} maxBarSize={48} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </section>
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+          <XAxis
+            dataKey="label"
+            tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+            tickLine={false}
+            axisLine={false}
+            allowDecimals={false}
+          />
+          <Tooltip content={<VelocityTooltip />} cursor={{ fill: 'var(--muted)', opacity: 0.4 }} />
+          <ReferenceLine
+            y={avg}
+            stroke="var(--muted-foreground)"
+            strokeDasharray="4 3"
+            strokeOpacity={0.5}
+          />
+          <Bar dataKey="count" fill="var(--primary)" radius={[3, 3, 0, 0]} maxBarSize={48} />
+        </BarChart>
+      </ResponsiveContainer>
+    </>
   )
 }

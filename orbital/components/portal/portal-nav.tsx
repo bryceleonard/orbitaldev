@@ -1,5 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
+import { signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { LogOut } from 'lucide-react'
@@ -12,6 +14,7 @@ export function PortalNav({ projectName }: Props) {
 
   async function handleSignOut() {
     await fetch('/api/auth/signout', { method: 'POST' })
+    await signOut(auth).catch(() => {})
     router.push('/login')
   }
 
