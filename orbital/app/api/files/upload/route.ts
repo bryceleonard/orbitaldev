@@ -41,22 +41,25 @@ export async function POST(req: NextRequest) {
   const uid = await getUid(req)
   if (!uid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { orgId, projectId, fileName, mimeType, sizeBytes } = await req.json()
-  if (!orgId || !projectId || !fileName) {
-    return NextResponse.json({ error: 'orgId, projectId, fileName required' }, { status: 400 })
+  const formData = await req.formData()
+  const file = formData.get('file') as File | null
+  const orgId = formData.get('orgId') as string | null
+  const projectId = formData.get('projectId') as string | null
+
+  if (!file || !orgId || !projectId) {
+    return NextResponse.json({ error: 'file, orgId, projectId required' }, { status: 400 })
   }
 
-  const resolvedMime: string = mimeType ?? 'application/octet-stream'
+  const resolvedMime = file.type || 'application/octet-stream'
   if (!ALLOWED_MIME_TYPES.has(resolvedMime)) {
     return NextResponse.json({ error: 'File type not allowed' }, { status: 400 })
   }
 
-  if (typeof sizeBytes === 'number' && sizeBytes > MAX_SIZE_BYTES) {
+  if (file.size > MAX_SIZE_BYTES) {
     return NextResponse.json({ error: 'File exceeds 100 MB limit' }, { status: 400 })
   }
 
-  // Strip path separators and control characters from the filename
-  const safeName = String(fileName).replace(/[/\\?%*:|"<>\0]/g, '_').trim()
+  const safeName = String(file.name).replace(/[/\\?%*:|"<>\0]/g, '_').trim()
   if (!safeName) return NextResponse.json({ error: 'Invalid file name' }, { status: 400 })
 
   const projSnap = await adminDb.doc(`orgs/${orgId}/projects/${projectId}`).get()
@@ -70,23 +73,18 @@ export async function POST(req: NextRequest) {
   const fileRef = adminDb.collection(`orgs/${orgId}/projects/${projectId}/files`).doc()
   const storagePath = `${orgId}/${projectId}/${fileRef.id}-${safeName}`
 
+  const buffer = Buffer.from(await file.arrayBuffer())
+  await getStorage().bucket(BUCKET).file(storagePath).save(buffer, { contentType: resolvedMime })
+
   await fileRef.set({
     name: safeName,
     storagePath,
     mimeType: resolvedMime,
-    sizeBytes: sizeBytes ?? 0,
+    sizeBytes: file.size,
     uploadedBy: uid,
     uploadedAt: new Date().toISOString(),
     sharedWithClient: false,
   })
 
-  const bucket = getStorage().bucket(BUCKET)
-  const file = bucket.file(storagePath)
-  const [uploadUrl] = await file.getSignedUrl({
-    action: 'write',
-    expires: Date.now() + 15 * 60 * 1000,
-    contentType: resolvedMime,
-  })
-
-  return NextResponse.json({ uploadUrl, fileId: fileRef.id })
+  return NextResponse.json({ fileId: fileRef.id })
 }

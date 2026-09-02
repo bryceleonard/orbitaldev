@@ -20,26 +20,13 @@ export function FileUploadButton({ orgId, projectId, onUploaded }: Props) {
     setUploading(true)
     setError(null)
     try {
-      const res = await fetch('/api/files/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orgId,
-          projectId,
-          fileName: file.name,
-          mimeType: file.type,
-          sizeBytes: file.size,
-        }),
-      })
-      if (!res.ok) throw new Error((await res.json()).error)
-      const { uploadUrl } = await res.json()
+      const body = new FormData()
+      body.append('file', file)
+      body.append('orgId', orgId)
+      body.append('projectId', projectId)
 
-      const putRes = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file,
-      })
-      if (!putRes.ok) throw new Error('Upload to storage failed')
+      const res = await fetch('/api/files/upload', { method: 'POST', body })
+      if (!res.ok) throw new Error((await res.json()).error)
 
       onUploaded()
     } catch (e) {

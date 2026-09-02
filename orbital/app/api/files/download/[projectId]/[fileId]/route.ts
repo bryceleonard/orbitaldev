@@ -29,29 +29,40 @@ export async function GET(
 
   const orgsSnap = await adminDb.collection('orgs').get()
   let storagePath: string | null = null
+  let fileName = 'download'
+  let mimeType = 'application/octet-stream'
 
   for (const orgDoc of orgsSnap.docs) {
     const fileSnap = await adminDb
       .doc(`orgs/${orgDoc.id}/projects/${projectId}/files/${fileId}`)
       .get()
-    if (fileSnap.exists) {
-      const projSnap = await adminDb.doc(`orgs/${orgDoc.id}/projects/${projectId}`).get()
-      const members = projSnap.data()?.members as Record<string, string> | undefined
-      if (!members?.[uid]) break
-      storagePath = fileSnap.data()!.storagePath as string
-      break
-    }
+    if (!fileSnap.exists) continue
+
+    const fileData = fileSnap.data()!
+    const projSnap = await adminDb.doc(`orgs/${orgDoc.id}/projects/${projectId}`).get()
+    const members = projSnap.data()?.members as Record<string, string> | undefined
+
+    const isMember = !!members?.[uid]
+    const isSharedWithClient = fileData.sharedWithClient === true
+
+    if (!isMember && !isSharedWithClient) break
+
+    storagePath = fileData.storagePath as string
+    fileName = (fileData.name as string) ?? 'download'
+    mimeType = (fileData.mimeType as string) ?? 'application/octet-stream'
+    break
   }
 
   if (!storagePath) {
     return NextResponse.json({ error: 'Not found or access denied' }, { status: 404 })
   }
 
-  const bucket = getStorage().bucket(BUCKET)
-  const [downloadUrl] = await bucket.file(storagePath).getSignedUrl({
-    action: 'read',
-    expires: Date.now() + 5 * 60 * 1000,
-  })
+  const [contents] = await getStorage().bucket(BUCKET).file(storagePath).download()
 
-  return NextResponse.redirect(downloadUrl)
+  return new NextResponse(contents.buffer as ArrayBuffer, {
+    headers: {
+      'Content-Type': mimeType,
+      'Content-Disposition': `attachment; filename="${fileName}"`,
+    },
+  })
 }
