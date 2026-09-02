@@ -66,7 +66,7 @@ function VelocityTooltip({
   )
 }
 
-export function BeadsVelocity({ issues, maxWeeks }: { issues: BeadsIssue[]; maxWeeks?: number }) {
+export function BeadsVelocity({ issues, maxWeeks, fill }: { issues: BeadsIssue[]; maxWeeks?: number; fill?: boolean }) {
   const data = useMemo(() => {
     const all = buildVelocityData(issues)
     return maxWeeks ? all.slice(-maxWeeks) : all
@@ -86,7 +86,7 @@ export function BeadsVelocity({ issues, maxWeeks }: { issues: BeadsIssue[]; maxW
           avg <span className="text-foreground font-medium">{avg}</span> / week
         </span>
       </div>
-      <ResponsiveContainer width="100%" height={180}>
+      <ResponsiveContainer width="100%" height={fill ? '100%' : 180}>
         <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
           <XAxis

@@ -133,37 +133,31 @@ export default function PortalOverviewPage() {
         )}
       </section>
 
-      {/* Two-column layout — Health + Velocity */}
-      <div className="grid grid-cols-[7fr_3fr] gap-8 items-start">
-        <section>
-          <SectionLabel>Health</SectionLabel>
-          <div className="grid grid-cols-2 gap-4">
-            <MetricCard
-              label="Schedule"
-              percent={schedulePct}
-              status={project.statusHeader.scheduleStatus}
-              centerLabel={`${schedulePct}%`}
-              centerSub="elapsed"
-              metricLine={`${daysElapsed} of ${totalDays} days`}
-            />
-            <MetricCard
-              label="Budget"
-              percent={budgetPct}
-              status={project.statusHeader.budgetStatus}
-              centerLabel={project.sow.totalHours ? `${budgetPct}%` : '—'}
-              centerSub="of budget"
-              metricLine={
-                project.sow.totalHours
-                  ? `${hoursConsumed} of ${project.sow.totalHours} hrs`
-                  : 'No budget set'
-              }
-            />
-          </div>
-        </section>
-
+      {/* Three-column row — Schedule, Budget, Velocity */}
+      <div className="grid grid-cols-3 gap-4">
+        <MetricCard
+          label="Schedule"
+          percent={schedulePct}
+          status={project.statusHeader.scheduleStatus}
+          centerLabel={`${schedulePct}%`}
+          centerSub="elapsed"
+          metricLine={`${daysElapsed} of ${totalDays} days`}
+        />
+        <MetricCard
+          label="Budget"
+          percent={budgetPct}
+          status={project.statusHeader.budgetStatus}
+          centerLabel={project.sow.totalHours ? `${budgetPct}%` : '—'}
+          centerSub="of budget"
+          metricLine={
+            project.sow.totalHours
+              ? `${hoursConsumed} of ${project.sow.totalHours} hrs`
+              : 'No budget set'
+          }
+        />
         {hasBeadsData && (
-          <div className="rounded-xl border bg-card p-5 pt-4">
-            <BeadsVelocity issues={beadsIssues} maxWeeks={4} />
+          <div className="rounded-xl border bg-card p-5 pt-4 flex flex-col">
+            <BeadsVelocity issues={beadsIssues} maxWeeks={4} fill />
           </div>
         )}
       </div>
@@ -250,7 +244,7 @@ function MetricCard({
   metricLine: string
 }) {
   return (
-    <div className="bg-card border rounded-md p-6 flex flex-col items-center gap-4">
+    <div className="bg-card border rounded-md p-6 flex flex-col items-center gap-4 h-full">
       <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground self-start">
         {label}
       </p>
