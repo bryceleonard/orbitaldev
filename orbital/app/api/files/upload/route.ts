@@ -5,7 +5,6 @@ import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { getStorage } from 'firebase-admin/storage'
 
 const COOKIE = process.env.SESSION_COOKIE_NAME ?? '__session'
-const BUCKET = process.env.FIREBASE_STORAGE_BUCKET!
 const MAX_SIZE_BYTES = 100 * 1024 * 1024 // 100 MB
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -73,7 +72,7 @@ export async function POST(req: NextRequest) {
   const fileRef = adminDb.collection(`orgs/${orgId}/projects/${projectId}/files`).doc()
   const storagePath = `${orgId}/${projectId}/${fileRef.id}-${safeName}`
 
-  const gcsFile = getStorage().bucket(BUCKET).file(storagePath)
+  const gcsFile = getStorage().bucket().file(storagePath)
   const [uploadUrl] = await gcsFile.getSignedUrl({
     action: 'write',
     expires: Date.now() + 15 * 60 * 1000,

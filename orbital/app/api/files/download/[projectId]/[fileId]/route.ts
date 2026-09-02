@@ -5,7 +5,6 @@ import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { getStorage } from 'firebase-admin/storage'
 
 const COOKIE = process.env.SESSION_COOKIE_NAME ?? '__session'
-const BUCKET = process.env.FIREBASE_STORAGE_BUCKET!
 
 async function getUid(req: NextRequest): Promise<string | null> {
   const cookie = req.cookies.get(COOKIE)?.value
@@ -57,7 +56,7 @@ export async function GET(
     return NextResponse.json({ error: 'Not found or access denied' }, { status: 404 })
   }
 
-  const gcsFile = getStorage().bucket(BUCKET).file(storagePath)
+  const gcsFile = getStorage().bucket().file(storagePath)
   const [downloadUrl] = await gcsFile.getSignedUrl({
     action: 'read',
     expires: Date.now() + 5 * 60 * 1000,
