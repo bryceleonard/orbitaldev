@@ -113,7 +113,7 @@ export default function PortalReportPage() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      <style>{`@page { size: A4; margin: 20mm; }`}</style>
+      <style>{`@page { size: A4; margin: 20mm; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }`}</style>
 
       <div className="max-w-4xl mx-auto px-8 py-8">
         {/* Print button — hidden when printing */}

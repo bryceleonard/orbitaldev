@@ -1,5 +1,6 @@
 'use client'
 import { useParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
 import { PortalProjectTabs } from '@/components/portal/portal-project-tabs'
@@ -8,6 +9,7 @@ export default function PortalProjectLayout({ children }: { children: React.Reac
   const { projectId } = useParams<{ projectId: string }>()
   const orgId = useOrgId()
   const { data: project } = useProject(orgId, projectId)
+  const pathname = usePathname()
 
   return (
     <div className="flex flex-col">
@@ -15,10 +17,12 @@ export default function PortalProjectLayout({ children }: { children: React.Reac
         <PortalProjectTabs projectId={projectId} />
       </div>
       <div className="px-[50px] py-8 print:p-0">
-        <div className="hidden print:block mb-6">
-          <p className="text-xs text-muted-foreground">Orbital — Client Portal</p>
-          <h1 className="text-2xl font-semibold">{project?.name ?? '—'}</h1>
-        </div>
+        {!pathname.endsWith('/report') && (
+          <div className="hidden print:block mb-6">
+            <p className="text-xs text-muted-foreground">Orbital — Client Portal</p>
+            <h1 className="text-2xl font-semibold">{project?.name ?? '—'}</h1>
+          </div>
+        )}
         {children}
       </div>
     </div>
