@@ -49,3 +49,30 @@ test('AdoCache type union includes beads-issues', () => {
   }
   expect(cache.type).toBe('beads-issues')
 })
+
+test('Decision interface has required RACI and lifecycle fields', () => {
+  const d: import('./types').Decision = {
+    id: 'd1',
+    seqId: '001',
+    question: 'Which framework?',
+    background: '',
+    responsible: 'Alice',
+    accountable: 'Bob',
+    consulted: '',
+    informed: '',
+    priority: 'high',
+    status: 'open',
+    dateIdentified: '2026-09-04',
+    dueDate: '2026-09-11',
+    dateDecided: '',
+    outcome: '',
+    timesRevisited: 0,
+    notes: '',
+    createdAt: '',
+    updatedAt: '',
+    createdBy: 'uid-1',
+  }
+  expect(d.seqId).toBe('001')
+  expect(d.status).toBe('open')
+  expect(d.timesRevisited).toBe(0)
+})

@@ -37,3 +37,50 @@ test('calls onAdd when add row is submitted', async () => {
   fireEvent.click(screen.getByRole('button', { name: /add/i }))
   await vi.waitFor(() => expect(onAdd).toHaveBeenCalledWith(expect.objectContaining({ title: 'New risk' })))
 })
+
+test('renders date input in add row for date column', async () => {
+  const { CrudTable } = await import('./crud-table')
+  render(
+    <CrudTable
+      columns={[{ key: 'dueDate', label: 'Due Date', type: 'date' }]}
+      rows={[]}
+      canEdit={true}
+      onAdd={vi.fn().mockResolvedValue(undefined)}
+      onUpdate={vi.fn()}
+      onDelete={vi.fn()}
+    />
+  )
+  expect(screen.getByDisplayValue('')).toHaveAttribute('type', 'date')
+})
+
+test('renders number input in add row for number column', async () => {
+  const { CrudTable } = await import('./crud-table')
+  render(
+    <CrudTable
+      columns={[{ key: 'count', label: 'Count', type: 'number' }]}
+      rows={[]}
+      canEdit={true}
+      onAdd={vi.fn().mockResolvedValue(undefined)}
+      onUpdate={vi.fn()}
+      onDelete={vi.fn()}
+    />
+  )
+  expect(screen.getByDisplayValue('0')).toHaveAttribute('type', 'number')
+})
+
+test('emptyDraft defaults number column to 0', async () => {
+  const { CrudTable } = await import('./crud-table')
+  const onAdd = vi.fn().mockResolvedValue(undefined)
+  render(
+    <CrudTable
+      columns={[{ key: 'count', label: 'Count', type: 'number' }]}
+      rows={[]}
+      canEdit={true}
+      onAdd={onAdd}
+      onUpdate={vi.fn()}
+      onDelete={vi.fn()}
+    />
+  )
+  fireEvent.click(screen.getByRole('button', { name: /add/i }))
+  await vi.waitFor(() => expect(onAdd).toHaveBeenCalledWith(expect.objectContaining({ count: 0 })))
+})

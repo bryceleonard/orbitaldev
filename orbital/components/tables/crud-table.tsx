@@ -7,7 +7,7 @@ import { Pencil, Trash2, Check, X } from 'lucide-react'
 export type ColumnDef<T> = {
   key: keyof T
   label: string
-  type?: 'text' | 'select' | 'toggle' | 'textarea'
+  type?: 'text' | 'select' | 'toggle' | 'textarea' | 'date' | 'number'
   options?: string[]
 }
 
@@ -24,7 +24,7 @@ function emptyDraft<T>(columns: ColumnDef<T>[]): Record<string, unknown> {
   return Object.fromEntries(
     columns.map(({ key, type, options }) => [
       key,
-      type === 'toggle' ? false : type === 'select' ? (options?.[0] ?? '') : '',
+      type === 'toggle' ? false : type === 'number' ? 0 : type === 'select' ? (options?.[0] ?? '') : '',
     ])
   )
 }
@@ -105,6 +105,27 @@ export function CrudTable<T extends { id: string }>({ columns, rows, canEdit, on
         />
       )
     }
+    if (col.type === 'date') {
+      return (
+        <input
+          type="date"
+          value={String(val ?? '')}
+          onChange={(e) => setEditField(col.key as string, e.target.value)}
+          className="border rounded px-2 py-1 text-sm w-full"
+        />
+      )
+    }
+    if (col.type === 'number') {
+      return (
+        <input
+          type="number"
+          min={0}
+          value={Number(val ?? 0)}
+          onChange={(e) => setEditField(col.key as string, Number(e.target.value))}
+          className="border rounded px-2 py-1 text-sm w-full"
+        />
+      )
+    }
     return (
       <Input
         value={String(val ?? '')}
@@ -158,6 +179,27 @@ export function CrudTable<T extends { id: string }>({ columns, rows, canEdit, on
           rows={2}
           placeholder={col.label}
           className="border rounded px-2 py-1 text-sm w-full resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+      )
+    }
+    if (col.type === 'date') {
+      return (
+        <input
+          type="date"
+          value={String(val ?? '')}
+          onChange={(e) => setDraftField(col.key as string, e.target.value)}
+          className="border rounded px-2 py-1 text-sm w-full"
+        />
+      )
+    }
+    if (col.type === 'number') {
+      return (
+        <input
+          type="number"
+          min={0}
+          value={Number(val ?? 0)}
+          onChange={(e) => setDraftField(col.key as string, Number(e.target.value))}
+          className="border rounded px-2 py-1 text-sm w-full"
         />
       )
     }

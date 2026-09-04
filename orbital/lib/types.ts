@@ -194,3 +194,27 @@ export interface AdoCache {
   fetchedAt: string
 }
 
+export type DecisionStatus = 'open' | 'pending_input' | 'decided' | 'revisit_requested' | 'closed'
+
+export interface Decision {
+  id: string
+  seqId: string            // zero-padded sequential: "001", "002"
+  question: string
+  background: string
+  responsible: string      // R — does the analysis, drives to recommendation
+  accountable: string      // A — single person with final call
+  consulted: string        // C — input sought before deciding
+  informed: string         // I — told after decision is made
+  priority: 'low' | 'medium' | 'high'
+  status: DecisionStatus
+  dateIdentified: string   // YYYY-MM-DD
+  dueDate: string          // YYYY-MM-DD
+  dateDecided: string      // YYYY-MM-DD
+  outcome: string
+  timesRevisited: number
+  notes: string
+  createdAt: string
+  updatedAt: string
+  createdBy: string
+}
+
