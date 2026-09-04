@@ -5,12 +5,13 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/use-auth'
 import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
-import { updateProject } from '@/lib/firestore/projects'
+import { updateProject, archiveProject } from '@/lib/firestore/projects'
 import { ShareDialog } from '@/components/projects/share-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { useRouter } from 'next/navigation'
 import type { TrackerBoard, TrackerType } from '@/lib/types'
 
 export default function OverviewPage() {
@@ -18,12 +19,14 @@ export default function OverviewPage() {
   const { user } = useAuth()
   const orgId = useOrgId()
   const qc = useQueryClient()
+  const router = useRouter()
   const { data: project } = useProject(orgId, projectId)
 
   const [name, setName] = useState(project?.name ?? '')
   const [description, setDescription] = useState(project?.description ?? '')
   const [shareOpen, setShareOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [archiving, setArchiving] = useState(false)
 
   useEffect(() => {
     if (project) {
@@ -43,6 +46,17 @@ export default function OverviewPage() {
     await updateProject(orgId, projectId, { name, description })
     qc.invalidateQueries({ queryKey: ['project', orgId, projectId] })
     setSaving(false)
+  }
+
+  async function handleArchiveToggle() {
+    if (!orgId || !project) return
+    setArchiving(true)
+    const newStatus = project.status === 'archived' ? 'active' : 'archived'
+    await updateProject(orgId, projectId, { status: newStatus })
+    qc.invalidateQueries({ queryKey: ['project', orgId, projectId] })
+    qc.invalidateQueries({ queryKey: ['projects', orgId] })
+    if (newStatus === 'archived') router.push('/dashboard')
+    setArchiving(false)
   }
 
   if (!project) return <p className="text-muted-foreground">Loading…</p>
@@ -67,11 +81,23 @@ export default function OverviewPage() {
           disabled={!canEdit}
         />
       </div>
-      {canEdit && (
-        <Button onClick={handleSave} disabled={saving} className="self-start">
-          {saving ? 'Saving…' : 'Save'}
-        </Button>
-      )}
+      <div className="flex items-center gap-3">
+        {canEdit && (
+          <Button onClick={handleSave} disabled={saving} className="self-start">
+            {saving ? 'Saving…' : 'Save'}
+          </Button>
+        )}
+        {isOwner && (
+          <Button
+            variant="outline"
+            onClick={handleArchiveToggle}
+            disabled={archiving}
+            className="self-start text-muted-foreground"
+          >
+            {archiving ? 'Saving…' : project.status === 'archived' ? 'Unarchive' : 'Archive project'}
+          </Button>
+        )}
+      </div>
 
       <div>
         <h2 className="font-medium mb-2">Members</h2>
