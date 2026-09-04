@@ -10,19 +10,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
+type Mode = 'choose' | 'create' | 'join' | 'waiting'
+
 export default function OnboardingPage() {
   const { user } = useAuth()
   const router = useRouter()
-  const [mode, setMode] = useState<'create' | 'join' | null>(null)
+  const [mode, setMode] = useState<Mode>('choose')
   const [orgName, setOrgName] = useState('')
   const [orgId, setOrgId] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   async function handleSignOut() {
     await fetch('/api/auth/signout', { method: 'POST' })
     await signOut(auth).catch(() => {})
-    router.replace('/login')
+    router.replace('/')
   }
 
   async function handleCreate() {
@@ -56,6 +59,18 @@ export default function OnboardingPage() {
     }
   }
 
+  async function handleCopy() {
+    if (!user) return
+    await navigator.clipboard.writeText(user.uid)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function handleCheckAccess() {
+    router.refresh()
+    router.replace('/dashboard')
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40">
       <Card className="w-full max-w-md">
@@ -63,7 +78,11 @@ export default function OnboardingPage() {
           <div className="flex items-start justify-between">
             <div>
               <CardTitle>Welcome to Orbital</CardTitle>
-              <CardDescription>Set up your workspace to get started.</CardDescription>
+              <CardDescription>
+                {mode === 'waiting'
+                  ? 'Your account is ready.'
+                  : 'Set up your workspace to get started.'}
+              </CardDescription>
             </div>
             <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground">
               Sign out
@@ -71,11 +90,12 @@ export default function OnboardingPage() {
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          {!mode && (
+
+          {mode === 'choose' && (
             <>
               <Button onClick={() => setMode('create')}>Create a new org</Button>
-              <Button variant="outline" onClick={() => setMode('join')}>
-                Join an existing org
+              <Button variant="outline" onClick={() => setMode('waiting')}>
+                I was invited to a project
               </Button>
             </>
           )}
@@ -92,7 +112,7 @@ export default function OnboardingPage() {
               <Button onClick={handleCreate} disabled={loading || !orgName.trim()}>
                 {loading ? 'Creating…' : 'Create org'}
               </Button>
-              <Button variant="ghost" onClick={() => setMode(null)}>Back</Button>
+              <Button variant="ghost" onClick={() => setMode('choose')}>Back</Button>
             </>
           )}
 
@@ -103,12 +123,32 @@ export default function OnboardingPage() {
                 id="orgId"
                 value={orgId}
                 onChange={(e) => setOrgId(e.target.value)}
-                placeholder="Paste the org ID from a team member"
+                placeholder="Paste the org ID"
               />
               <Button onClick={handleJoin} disabled={loading || !orgId.trim()}>
                 {loading ? 'Joining…' : 'Join org'}
               </Button>
-              <Button variant="ghost" onClick={() => setMode(null)}>Back</Button>
+              <Button variant="ghost" onClick={() => setMode('choose')}>Back</Button>
+            </>
+          )}
+
+          {mode === 'waiting' && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Share your user ID with the person who invited you so they can add you to their project.
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs bg-muted rounded px-3 py-2 font-mono break-all">
+                  {user?.uid ?? '…'}
+                </code>
+                <Button variant="outline" size="sm" onClick={handleCopy}>
+                  {copied ? 'Copied!' : 'Copy'}
+                </Button>
+              </div>
+              <Button onClick={handleCheckAccess}>
+                I've been added — continue
+              </Button>
+              <Button variant="ghost" onClick={() => setMode('choose')}>Back</Button>
             </>
           )}
 
