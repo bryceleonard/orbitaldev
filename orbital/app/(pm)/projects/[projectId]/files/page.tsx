@@ -17,7 +17,7 @@ export default function FilesPage() {
   const qc = useQueryClient()
   const { data: project } = useProject(orgId, projectId)
 
-  const { data: files = [] } = useQuery({
+  const { data: files = [], isLoading } = useQuery({
     queryKey: ['files', orgId, projectId],
     queryFn: () => listFiles(orgId!, projectId),
     enabled: !!orgId,
@@ -50,7 +50,10 @@ export default function FilesPage() {
         )}
       </div>
 
-      {files.length === 0 && <p className="text-muted-foreground text-sm">No files uploaded yet.</p>}
+      {isLoading
+        ? <p className="text-muted-foreground text-sm">Loading…</p>
+        : files.length === 0 && <p className="text-muted-foreground text-sm">No files uploaded yet.</p>
+      }
 
       <div className="flex flex-col gap-2">
         {files.map((f) => (
