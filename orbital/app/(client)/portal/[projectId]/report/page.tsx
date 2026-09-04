@@ -5,10 +5,13 @@ import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
 import { listRisks } from '@/lib/firestore/risks'
 import { listMilestones } from '@/lib/firestore/milestones'
+import { listResources } from '@/lib/firestore/resources'
+import { getLatestBoardCache } from '@/lib/firestore/ado-cache'
+import { BeadsVelocity } from '@/components/boards/beads-velocity'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Printer } from 'lucide-react'
-import type { StatusLevel, MilestoneStatus } from '@/lib/types'
+import type { StatusLevel, MilestoneStatus, BeadsIssue } from '@/lib/types'
 
 function schedulePercent(sow: { startDate: string; endDate: string }): number {
   if (!sow.startDate || !sow.endDate) return 0
@@ -60,6 +63,10 @@ const MILESTONE_STATUS_CLASS: Record<MilestoneStatus, string> = {
   completed:   'bg-green-100 text-green-800 border-green-200',
 }
 
+function SectionLabel({ children }: { children: string }) {
+  return <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">{children}</h3>
+}
+
 function MetricBlock({
   label, percent, status, detail,
 }: {
@@ -98,6 +105,19 @@ export default function PortalReportPage() {
     queryFn: () => listMilestones(orgId!, projectId),
     enabled,
   })
+  const { data: resources = [] } = useQuery({
+    queryKey: ['resources', orgId, projectId],
+    queryFn: () => listResources(orgId!, projectId),
+    enabled,
+  })
+
+  const beadsBoard = project?.trackerBoards.find((b) => b.type === 'beads')
+  const { data: beadsCache } = useQuery({
+    queryKey: ['board-cache', orgId, projectId, beadsBoard?.id, 'beads-issues'],
+    queryFn: () => getLatestBoardCache(orgId!, projectId, beadsBoard!.id, 'beads-issues'),
+    enabled: !!orgId && !!beadsBoard,
+  })
+  const beadsIssues: BeadsIssue[] = Array.isArray(beadsCache?.payload) ? (beadsCache.payload as BeadsIssue[]) : []
 
   if (!project) return <p className="text-gray-400 p-8">Loading…</p>
 
@@ -109,7 +129,12 @@ export default function PortalReportPage() {
     : 0
   const openRisks = risks.filter((r) => r.status === 'open')
   const sortedMilestones = [...milestones].sort((a, b) => a.startDate.localeCompare(b.startDate))
+  const totalHours = resources.reduce((s, r) => s + r.hours, 0)
   const generatedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+
+  // BeadsVelocity returns null when data.length < 2, so we check we have enough data
+  const closedIssues = beadsIssues.filter((b) => b.status === 'closed' && b.updated_at)
+  const hasVelocityData = closedIssues.length >= 2
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
@@ -152,8 +177,41 @@ export default function PortalReportPage() {
           )}
         </section>
 
+        {/* Resource schedule */}
+        {resources.length > 0 && (
+          <section className="mb-8">
+            <SectionLabel>Team</SectionLabel>
+            <table className="w-full text-sm border border-gray-200 rounded-md overflow-hidden">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="text-left px-4 py-2 font-medium text-gray-500 w-8">#</th>
+                  <th className="text-left px-4 py-2 font-medium text-gray-500">Role</th>
+                  <th className="text-left px-4 py-2 font-medium text-gray-500">Name</th>
+                  <th className="text-right px-4 py-2 font-medium text-gray-500">Hours</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resources.map((r, i) => (
+                  <tr key={r.id} className={i % 2 === 0 ? '' : 'bg-gray-50/50'}>
+                    <td className="px-4 py-2 text-gray-400 font-mono text-xs">{i + 1}</td>
+                    <td className="px-4 py-2 font-medium text-gray-900">{r.role}</td>
+                    <td className="px-4 py-2 text-gray-600">{r.name}</td>
+                    <td className="px-4 py-2 text-right text-gray-600 font-mono">{r.hours}</td>
+                  </tr>
+                ))}
+                <tr className="border-t border-gray-200 bg-gray-50">
+                  <td className="px-4 py-2" colSpan={3}>
+                    <span className="font-medium text-gray-700">Total</span>
+                  </td>
+                  <td className="px-4 py-2 text-right font-bold text-gray-900 font-mono">{totalHours}</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        )}
+
         {/* Metrics */}
-        <section className="grid grid-cols-2 gap-6 mb-10">
+        <section className={`grid gap-6 mb-10 ${hasVelocityData ? 'grid-cols-3' : 'grid-cols-2'}`}>
           <MetricBlock
             label="Schedule"
             percent={schedulePct}
@@ -166,18 +224,26 @@ export default function PortalReportPage() {
             status={project.statusHeader.budgetStatus}
             detail={project.sow.totalHours ? `${hoursConsumed} of ${project.sow.totalHours} hrs` : 'No budget set'}
           />
+          {hasVelocityData && (
+            <div className="border border-gray-200 rounded-md p-5">
+              <div style={{ height: 160 }}>
+                <BeadsVelocity issues={beadsIssues} maxWeeks={4} fill />
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Risks */}
         <section className="mb-10 break-before-page">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Risks</h3>
+          <SectionLabel>Risks</SectionLabel>
           {openRisks.length === 0 ? (
             <p className="text-sm text-gray-500">No open risks.</p>
           ) : (
             <table className="w-full text-sm border border-gray-200 rounded-md overflow-hidden">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="text-left px-4 py-2 font-medium text-gray-500 w-28">Severity</th>
+                  <th className="text-left px-4 py-2 font-medium text-gray-500 w-24">Severity</th>
+                  <th className="text-left px-4 py-2 font-medium text-gray-500 w-32">Owner</th>
                   <th className="text-left px-4 py-2 font-medium text-gray-500">Risk</th>
                   <th className="text-left px-4 py-2 font-medium text-gray-500">Description</th>
                 </tr>
@@ -190,6 +256,7 @@ export default function PortalReportPage() {
                         {r.severity.toUpperCase()}
                       </Badge>
                     </td>
+                    <td className="px-4 py-2 text-gray-600">{r.owner || '—'}</td>
                     <td className="px-4 py-2 font-medium text-gray-900">{r.title}</td>
                     <td className="px-4 py-2 text-gray-600">{r.description}</td>
                   </tr>
@@ -202,7 +269,7 @@ export default function PortalReportPage() {
         {/* Milestones */}
         {sortedMilestones.length > 0 && (
           <section className="mb-10 break-before-page">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Milestones</h3>
+            <SectionLabel>Milestones</SectionLabel>
             <table className="w-full text-sm border border-gray-200 rounded-md overflow-hidden">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
