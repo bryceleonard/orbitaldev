@@ -5,10 +5,11 @@ import { cn } from '@/lib/utils'
 import type { TrackerBoard } from '@/lib/types'
 
 const STATIC_BEFORE = [
-  { label: 'Overview',     segment: 'overview' },
-  { label: 'SOW',          segment: 'sow' },
-  { label: 'Status',       segment: 'status' },
-  { label: 'Files',        segment: 'files' },
+  { label: 'Overview',   segment: 'overview' },
+  { label: 'SOW',        segment: 'sow' },
+  { label: 'Status',     segment: 'status' },
+  { label: 'Decisions',  segment: 'decisions' },
+  { label: 'Files',      segment: 'files' },
 ]
 
 const STATIC_AFTER = [
