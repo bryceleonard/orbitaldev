@@ -2,7 +2,7 @@ export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
-import { serverTimestamp } from 'firebase-admin/firestore'
+import { FieldValue } from 'firebase-admin/firestore'
 
 const COOKIE = process.env.SESSION_COOKIE_NAME ?? '__session'
 
@@ -46,18 +46,18 @@ export async function POST(req: NextRequest) {
   // Add to project members
   await adminDb.doc(`orgs/${orgId}/projects/${projectId}`).update({
     [`members.${targetUid}`]: role,
-    updatedAt: serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   })
 
   // Ensure the user is associated with this org
   await adminDb.doc(`orgs/${orgId}/users/${targetUid}`).set({
     uid: targetUid,
     email: email.trim(),
-    createdAt: serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
   }, { merge: true })
   await adminDb.doc(`users/${targetUid}`).set({
     orgId,
-    updatedAt: serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   }, { merge: true })
 
   return NextResponse.json({ uid: targetUid })
