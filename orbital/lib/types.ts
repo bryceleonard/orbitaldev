@@ -89,6 +89,7 @@ export interface Project {
   members: Record<string, AccessLevel>
   sow: Sow
   statusHeader: StatusHeader
+  hoursUsed: number
   createdBy: string
   createdAt: string
   updatedAt: string

@@ -3,7 +3,6 @@ import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
-import { listResources } from '@/lib/firestore/resources'
 import { listRisks } from '@/lib/firestore/risks'
 import { listMilestones } from '@/lib/firestore/milestones'
 import { getLatestBoardCache } from '@/lib/firestore/ado-cache'
@@ -73,11 +72,6 @@ export default function PortalOverviewPage() {
   const { data: project } = useProject(orgId, projectId)
   const enabled = !!orgId
 
-  const { data: resources = [] } = useQuery({
-    queryKey: ['resources', orgId, projectId],
-    queryFn: () => listResources(orgId!, projectId),
-    enabled,
-  })
   const { data: risks = [] } = useQuery({
     queryKey: ['risks', orgId, projectId],
     queryFn: () => listRisks(orgId!, projectId),
@@ -101,7 +95,7 @@ export default function PortalOverviewPage() {
 
   const schedulePct = schedulePercent(project.sow)
   const { elapsed: daysElapsed, total: totalDays } = scheduleDays(project.sow)
-  const hoursConsumed = resources.reduce((sum, r) => sum + r.hours, 0)
+  const hoursConsumed = project.hoursUsed ?? 0
   const budgetPct = budgetPercent(hoursConsumed, project.sow.totalHours)
   const openRisks = risks.filter((r) => r.status === 'open')
   const sortedMilestones = [...milestones].sort((a, b) => a.startDate.localeCompare(b.startDate))

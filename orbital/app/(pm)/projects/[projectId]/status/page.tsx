@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/use-auth'
@@ -10,6 +10,8 @@ import { listRisks, addRisk, updateRisk, deleteRisk } from '@/lib/firestore/risk
 import { listClientActions, addClientAction, updateClientAction, deleteClientAction } from '@/lib/firestore/client-actions'
 import { CrudTable } from '@/components/tables/crud-table'
 import { StatusBadge } from '@/components/status/status-badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import type { StatusLevel, Risk, ClientAction } from '@/lib/types'
 
 const STATUS_OPTIONS: StatusLevel[] = ['on_track', 'at_risk', 'off_track']
@@ -28,7 +30,12 @@ export default function StatusPage() {
   const qc = useQueryClient()
   const { data: project } = useProject(orgId, projectId)
 
-  const [budgetConsumed, setBudgetConsumed] = useState(0)
+  const [hoursUsed, setHoursUsed] = useState(0)
+  const [savingHours, setSavingHours] = useState(false)
+
+  useEffect(() => {
+    if (project) setHoursUsed(project.hoursUsed ?? 0)
+  }, [project])
 
   const enabled = !!orgId
   const { data: risks = [] } = useQuery({ queryKey: ['risks', orgId, projectId], queryFn: () => listRisks(orgId!, projectId), enabled })
@@ -45,6 +52,14 @@ export default function StatusPage() {
       statusHeader: { ...project.statusHeader, [field]: value },
     })
     qc.invalidateQueries({ queryKey: ['project', orgId, projectId] })
+  }
+
+  async function saveHoursUsed() {
+    if (!orgId) return
+    setSavingHours(true)
+    await updateProject(orgId, projectId, { hoursUsed })
+    qc.invalidateQueries({ queryKey: ['project', orgId, projectId] })
+    setSavingHours(false)
   }
 
   const inv = (key: string) => () => qc.invalidateQueries({ queryKey: [key, orgId, projectId] })
@@ -80,11 +95,12 @@ export default function StatusPage() {
         </div>
         <div className="border rounded-md p-4">
           <p className="text-sm text-muted-foreground">Budget consumed</p>
-          {canEdit
-            ? <input type="number" value={budgetConsumed} onChange={(e) => setBudgetConsumed(+e.target.value)} className="text-2xl font-semibold w-24 border-b focus:outline-none" />
-            : <p className="text-2xl font-semibold">{budgetConsumed}</p>
-          }
-          <p className="text-xs text-muted-foreground">of {project.sow.totalHours} hours</p>
+          <p className="text-2xl font-semibold">{hoursUsed} hrs</p>
+          <p className="text-xs text-muted-foreground">
+            {project.sow.totalHours
+              ? `${Math.round((hoursUsed / project.sow.totalHours) * 100)}% of ${project.sow.totalHours} hrs`
+              : 'No budget set'}
+          </p>
         </div>
         <div className="border rounded-md p-4">
           <p className="text-sm text-muted-foreground">Scope</p>
@@ -92,6 +108,26 @@ export default function StatusPage() {
           <p className="text-xs text-muted-foreground">stories from ADO (Plan 4)</p>
         </div>
       </section>
+
+      {canEdit && (
+        <section>
+          <h2 className="font-semibold mb-3">Hours Used</h2>
+          <div className="flex items-center gap-3">
+            <Input
+              type="number"
+              className="w-40"
+              value={hoursUsed || ''}
+              onChange={(e) => setHoursUsed(e.target.value === '' ? 0 : +e.target.value)}
+              onFocus={(e) => e.target.select()}
+              placeholder="0"
+            />
+            <span className="text-sm text-muted-foreground">cumulative hours billed to date</span>
+            <Button onClick={saveHoursUsed} disabled={savingHours} size="sm">
+              {savingHours ? 'Saving…' : 'Save'}
+            </Button>
+          </div>
+        </section>
+      )}
 
       <section>
         <h2 className="font-semibold mb-3">Risks and Issues</h2>
