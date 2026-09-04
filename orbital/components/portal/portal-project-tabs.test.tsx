@@ -50,3 +50,11 @@ test('overview tab has aria-current when on overview path', async () => {
   render(<PortalProjectTabs projectId="p1" trackerBoards={[]} />)
   expect(screen.getByRole('link', { name: /overview/i })).toHaveAttribute('aria-current', 'page')
 })
+
+test('renders Export PDF link pointing to the report route in a new tab', async () => {
+  const { PortalProjectTabs } = await import('./portal-project-tabs')
+  render(<PortalProjectTabs projectId="p1" trackerBoards={[]} />)
+  const link = screen.getByRole('link', { name: /export pdf/i })
+  expect(link).toHaveAttribute('href', '/portal/p1/report')
+  expect(link).toHaveAttribute('target', '_blank')
+})
