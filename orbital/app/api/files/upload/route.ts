@@ -18,6 +18,8 @@ const ALLOWED_MIME_TYPES = new Set([
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   'text/plain',
   'text/csv',
+  'text/markdown',
+  'text/html',
   'image/png',
   'image/jpeg',
   'image/gif',
