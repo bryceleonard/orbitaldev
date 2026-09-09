@@ -4,6 +4,7 @@ import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
+import { Logo40AU } from '@/components/ui/logo'
 import { LogOut } from 'lucide-react'
 
 interface Props { projectName?: string }
@@ -21,7 +22,7 @@ export function PortalNav({ projectName }: Props) {
   return (
     <header className="flex items-center justify-between border-b px-8 py-4 print:hidden">
       <div className="flex items-center gap-3">
-        <span className="font-semibold text-lg">Orbital</span>
+        <Logo40AU className="h-5 w-auto" />
         {projectName && (
           <>
             <span className="text-muted-foreground">/</span>
