@@ -138,7 +138,19 @@ export default function PortalReportPage() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      <style>{`@page { size: A4; margin: 12mm; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }`}</style>
+      <style>{`
+        @page {
+          size: A4;
+          margin: 12mm;
+          @top-left    { content: none; }
+          @top-center  { content: none; }
+          @top-right   { content: none; }
+          @bottom-left { content: none; }
+          @bottom-right { content: none; }
+          @bottom-center { content: counter(page); font-size: 9pt; color: #9ca3af; }
+        }
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      `}</style>
 
       <div className="max-w-5xl mx-auto px-6 py-8">
         {/* Print button — hidden when printing */}
@@ -177,9 +189,36 @@ export default function PortalReportPage() {
           )}
         </section>
 
-        {/* Resource schedule */}
-        {resources.length > 0 && (
+        {/* Schedule + Budget */}
+        <section className="grid grid-cols-2 gap-6 mb-6">
+          <MetricBlock
+            label="Schedule"
+            percent={schedulePct}
+            status={project.statusHeader.scheduleStatus}
+            detail={totalDays ? `${daysElapsed} of ${totalDays} days` : 'No dates set'}
+          />
+          <MetricBlock
+            label="Budget"
+            percent={budgetPct}
+            status={project.statusHeader.budgetStatus}
+            detail={project.sow.totalHours ? `${hoursConsumed} of ${project.sow.totalHours} hrs` : 'No budget set'}
+          />
+        </section>
+
+        {/* Velocity — full width, beads projects only */}
+        {hasVelocityData && (
           <section className="mb-8">
+            <div className="border border-gray-200 rounded-md p-5">
+              <div style={{ height: 160 }}>
+                <BeadsVelocity issues={beadsIssues} maxWeeks={4} fill />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Team */}
+        {resources.length > 0 && (
+          <section className="mb-10">
             <SectionLabel>Team</SectionLabel>
             <table className="w-full text-sm border border-gray-200 rounded-md overflow-hidden">
               <thead>
@@ -209,29 +248,6 @@ export default function PortalReportPage() {
             </table>
           </section>
         )}
-
-        {/* Metrics */}
-        <section className={`grid gap-6 mb-10 ${hasVelocityData ? 'grid-cols-3' : 'grid-cols-2'}`}>
-          <MetricBlock
-            label="Schedule"
-            percent={schedulePct}
-            status={project.statusHeader.scheduleStatus}
-            detail={totalDays ? `${daysElapsed} of ${totalDays} days` : 'No dates set'}
-          />
-          <MetricBlock
-            label="Budget"
-            percent={budgetPct}
-            status={project.statusHeader.budgetStatus}
-            detail={project.sow.totalHours ? `${hoursConsumed} of ${project.sow.totalHours} hrs` : 'No budget set'}
-          />
-          {hasVelocityData && (
-            <div className="border border-gray-200 rounded-md p-5">
-              <div style={{ height: 160 }}>
-                <BeadsVelocity issues={beadsIssues} maxWeeks={4} fill />
-              </div>
-            </div>
-          )}
-        </section>
 
         {/* Risks */}
         <section className="mb-10 break-before-page">
