@@ -294,7 +294,7 @@ export function BeadsStatusView({
                     </span>
                     <span className="flex-1 min-w-0 text-sm font-medium truncate">{epic.title}</span>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">{ec}/{et}</span>
-                    <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                    <div className="w-20 h-1.5 rounded-full bg-white/15 overflow-hidden flex-shrink-0">
                       <div
                         className="h-full rounded-full bg-primary transition-all"
                         style={{ width: `${ep}%` }}
