@@ -250,7 +250,7 @@ export default function PortalReportPage() {
         )}
 
         {/* Risks */}
-        <section className="mb-10 break-before-page">
+        <section className="mb-10">
           <SectionLabel>Risks</SectionLabel>
           {openRisks.length === 0 ? (
             <p className="text-sm text-gray-500">No open risks.</p>
