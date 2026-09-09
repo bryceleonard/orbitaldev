@@ -68,7 +68,7 @@ export function MilestonesGantt({ milestones, showTooltips = false }: Props) {
 
   const mondays = getMondaysInRange(rangeStart, rangeEnd)
   const weeks = mondays.length
-  const minWidth = Math.max(700, weeks * 80 + 200)
+  const minWidth = Math.max(700, weeks * 80 + 220)
 
   function formatShort(d: Date): string {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -79,7 +79,7 @@ export function MilestonesGantt({ milestones, showTooltips = false }: Props) {
       <div style={{ minWidth }}>
         {/* Header row */}
         <div className="flex border-b">
-          <div className="flex-shrink-0" style={{ width: 200 }} />
+          <div className="flex-shrink-0 sticky left-0 z-10 bg-card border-r border-border/40" style={{ width: 220 }} />
           <div className="flex-1 relative h-8">
             {mondays.map((monday, i) => {
               const left = daysFraction(rangeStart, monday, totalDays) * 100
@@ -107,9 +107,8 @@ export function MilestonesGantt({ milestones, showTooltips = false }: Props) {
             <div key={milestone.id} className="flex border-b last:border-b-0 h-12 items-center">
               {/* Label */}
               <div
-                className="flex-shrink-0 px-3 text-sm font-medium truncate text-foreground"
-                style={{ width: 200 }}
-                title={milestone.name}
+                className="flex-shrink-0 sticky left-0 z-10 bg-card border-r border-border/40 px-3 py-1 text-sm font-medium text-foreground"
+                style={{ width: 220 }}
               >
                 {milestone.name}
               </div>
