@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
 import { updateProject } from '@/lib/firestore/projects'
-import { listResources, addResource, deleteResource } from '@/lib/firestore/resources'
+import { listResources, addResource, updateResource, deleteResource } from '@/lib/firestore/resources'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,7 +32,7 @@ export default function SowPage() {
   useEffect(() => {
     if (project?.sow) setSow(project.sow)
   }, [project])
-  const [newResource, setNewResource] = useState<Omit<Resource, 'id'>>({ name: '', role: '', hours: 0 })
+  const [newResource, setNewResource] = useState<Omit<Resource, 'id'>>({ name: '', role: '', hours: 0, currentHours: 0 })
 
   const canEdit = user && project
     ? project.members[user.uid] === 'owner' || project.members[user.uid] === 'editor'
@@ -50,7 +50,7 @@ export default function SowPage() {
     if (!orgId || !newResource.name.trim()) return
     await addResource(orgId, projectId, newResource)
     qc.invalidateQueries({ queryKey: ['resources', orgId, projectId] })
-    setNewResource({ name: '', role: '', hours: 0 })
+    setNewResource({ name: '', role: '', hours: 0, currentHours: 0 })
   }
 
   async function handleDeleteResource(id: string) {
@@ -89,13 +89,38 @@ export default function SowPage() {
       <section>
         <h2 className="font-semibold mb-4">Resource Schedule</h2>
         <table className="w-full text-sm border rounded-md overflow-hidden">
-          <thead className="bg-muted"><tr><th className="text-left p-2">Name</th><th className="text-left p-2">Role</th><th className="text-left p-2">Hours</th>{canEdit && <th />}</tr></thead>
+          <thead className="bg-muted">
+            <tr>
+              <th className="text-left p-2">Name</th>
+              <th className="text-left p-2">Role</th>
+              <th className="text-right p-2">Total Hrs</th>
+              <th className="text-right p-2">Current Hrs</th>
+              {canEdit && <th />}
+            </tr>
+          </thead>
           <tbody>
             {resources.map((r) => (
               <tr key={r.id} className="border-t">
                 <td className="p-2">{r.name}</td>
                 <td className="p-2">{r.role}</td>
-                <td className="p-2">{r.hours}</td>
+                <td className="p-2 text-right font-mono">{r.hours}</td>
+                <td className="p-2 text-right">
+                  {canEdit ? (
+                    <Input
+                      type="number"
+                      className="w-20 text-right font-mono ml-auto"
+                      value={r.currentHours ?? 0}
+                      onChange={(e) => {
+                        const val = e.target.value === '' ? 0 : +e.target.value
+                        updateResource(orgId!, projectId, r.id, { currentHours: val })
+                          .then(() => qc.invalidateQueries({ queryKey: ['resources', orgId, projectId] }))
+                      }}
+                      onFocus={(e) => e.target.select()}
+                    />
+                  ) : (
+                    <span className="font-mono">{r.currentHours ?? 0}</span>
+                  )}
+                </td>
                 {canEdit && <td className="p-2"><Button variant="ghost" size="sm" onClick={() => handleDeleteResource(r.id)}>Remove</Button></td>}
               </tr>
             ))}
@@ -104,6 +129,7 @@ export default function SowPage() {
                 <td className="p-2"><Input placeholder="Name" value={newResource.name} onChange={(e) => setNewResource({ ...newResource, name: e.target.value })} /></td>
                 <td className="p-2"><Input placeholder="Role" value={newResource.role} onChange={(e) => setNewResource({ ...newResource, role: e.target.value })} /></td>
                 <td className="p-2"><Input type="number" placeholder="0" value={newResource.hours || ''} onChange={(e) => setNewResource({ ...newResource, hours: e.target.value === '' ? 0 : +e.target.value })} onFocus={(e) => e.target.select()} /></td>
+                <td className="p-2"><Input type="number" placeholder="0" value={newResource.currentHours || ''} onChange={(e) => setNewResource({ ...newResource, currentHours: e.target.value === '' ? 0 : +e.target.value })} onFocus={(e) => e.target.select()} /></td>
                 <td className="p-2"><Button size="sm" onClick={handleAddResource}>Add</Button></td>
               </tr>
             )}

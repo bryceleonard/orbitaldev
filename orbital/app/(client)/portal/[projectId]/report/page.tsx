@@ -227,7 +227,8 @@ export default function PortalReportPage() {
                   <th className="text-left px-4 py-2 font-medium text-gray-500 w-8">#</th>
                   <th className="text-left px-4 py-2 font-medium text-gray-500">Role</th>
                   <th className="text-left px-4 py-2 font-medium text-gray-500">Name</th>
-                  <th className="text-right px-4 py-2 font-medium text-gray-500">Hours</th>
+                  <th className="text-right px-4 py-2 font-medium text-gray-500">Total Hrs</th>
+                  <th className="text-right px-4 py-2 font-medium text-gray-500">Current Hrs</th>
                 </tr>
               </thead>
               <tbody>
@@ -237,6 +238,7 @@ export default function PortalReportPage() {
                     <td className="px-4 py-2 font-medium text-gray-900">{r.role}</td>
                     <td className="px-4 py-2 text-gray-600">{r.name}</td>
                     <td className="px-4 py-2 text-right text-gray-600 font-mono">{r.hours}</td>
+                    <td className="px-4 py-2 text-right text-gray-600 font-mono">{r.currentHours ?? 0}</td>
                   </tr>
                 ))}
                 <tr className="border-t border-gray-200 bg-gray-50">
@@ -244,6 +246,9 @@ export default function PortalReportPage() {
                     <span className="font-medium text-gray-700">Total</span>
                   </td>
                   <td className="px-4 py-2 text-right font-bold text-gray-900 font-mono">{totalHours}</td>
+                  <td className="px-4 py-2 text-right font-bold text-gray-900 font-mono">
+                    {resources.reduce((s, r) => s + (r.currentHours ?? 0), 0)}
+                  </td>
                 </tr>
               </tbody>
             </table>

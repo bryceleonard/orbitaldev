@@ -100,6 +100,7 @@ export interface Resource {
   name: string
   role: string
   hours: number
+  currentHours?: number
 }
 
 export interface ProjectFile {
