@@ -10,6 +10,7 @@ import { listResources, addResource, deleteResource } from '@/lib/firestore/reso
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import type { Resource } from '@/lib/types'
 
 export default function SowPage() {
@@ -69,7 +70,19 @@ export default function SowPage() {
           <div><Label>End date</Label><Input type="date" value={sow.endDate} onChange={(e) => setSow({ ...sow, endDate: e.target.value })} disabled={!canEdit} /></div>
           <div><Label>Total hours</Label><Input type="number" value={sow.totalHours || ''} onChange={(e) => setSow({ ...sow, totalHours: e.target.value === '' ? 0 : +e.target.value })} onFocus={(e) => e.target.select()} disabled={!canEdit} /></div>
         </div>
-        <div className="mt-4"><Label>Summary</Label><Input value={sow.summary} onChange={(e) => setSow({ ...sow, summary: e.target.value })} disabled={!canEdit} /></div>
+        <div className="mt-4">
+          <Label>Summary</Label>
+          <Textarea
+            value={sow.summary}
+            onChange={(e) => {
+              setSow({ ...sow, summary: e.target.value })
+              e.target.style.height = 'auto'
+              e.target.style.height = `${e.target.scrollHeight}px`
+            }}
+            disabled={!canEdit}
+            className="mt-1 min-h-28 resize-none overflow-hidden"
+          />
+        </div>
         {canEdit && <Button onClick={handleSaveSow} disabled={saving} className="mt-4">{saving ? 'Saving…' : 'Save SOW'}</Button>}
       </section>
 
