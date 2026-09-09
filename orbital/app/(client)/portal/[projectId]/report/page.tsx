@@ -149,6 +149,7 @@ export default function PortalReportPage() {
           @bottom-right { content: none; }
           @bottom-center { content: counter(page); font-size: 9pt; color: #9ca3af; }
         }
+        html, body { background: white !important; color: #111 !important; }
         * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       `}</style>
 

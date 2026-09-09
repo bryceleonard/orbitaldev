@@ -20,7 +20,7 @@ export function PortalNav({ projectName }: Props) {
   }
 
   return (
-    <header className="flex items-center justify-between border-b px-8 py-4 print:hidden">
+    <header className="flex items-center justify-between border-b bg-card px-8 py-4 print:hidden">
       <div className="flex items-center gap-3">
         <Logo40AU className="h-5 w-auto" />
         {projectName && (
