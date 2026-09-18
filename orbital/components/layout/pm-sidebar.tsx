@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { LayoutDashboard, LogOut } from 'lucide-react'
-import { Logo40AU } from '@/components/ui/logo'
+import { LogoHealthStream } from '@/components/ui/logo'
 
 export function PmSidebar() {
   const { user } = useAuth()
@@ -23,7 +23,7 @@ export function PmSidebar() {
   return (
     <aside className="flex h-screen w-56 flex-col border-r bg-background">
       <div className="px-4 py-5">
-        <Logo40AU className="h-5 w-auto" />
+        <LogoHealthStream className="h-5 w-auto" />
       </div>
       <nav className="flex-1 px-2">
         <Link

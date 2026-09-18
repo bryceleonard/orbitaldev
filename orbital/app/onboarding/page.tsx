@@ -107,7 +107,7 @@ export default function OnboardingPage() {
                 id="orgName"
                 value={orgName}
                 onChange={(e) => setOrgName(e.target.value)}
-                placeholder="e.g. FortyAU"
+                placeholder="e.g. Acme Hospital"
               />
               <Button onClick={handleCreate} disabled={loading || !orgName.trim()}>
                 {loading ? 'Creating…' : 'Create org'}

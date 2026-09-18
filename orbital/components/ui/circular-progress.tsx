@@ -9,7 +9,7 @@ interface CircularProgressProps {
 }
 
 const STATUS_COLOR: Record<StatusLevel, string> = {
-  on_track:  '#fad542',
+  on_track:  '#0a69c8',
   at_risk:   '#d97706',
   off_track: '#dc2626',
 }

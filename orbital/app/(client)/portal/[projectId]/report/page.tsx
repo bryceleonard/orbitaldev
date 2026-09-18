@@ -164,7 +164,7 @@ export default function PortalReportPage() {
 
         {/* Header band */}
         <header className="flex items-center justify-between pb-4 mb-8 border-b border-gray-200">
-          <span className="text-lg font-bold tracking-tight text-gray-900">FortyAU</span>
+          <span className="text-lg font-bold tracking-tight text-gray-900">HealthStream</span>
           <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">Project Status Report</span>
           <span className="text-sm text-gray-500">{generatedDate}</span>
         </header>
