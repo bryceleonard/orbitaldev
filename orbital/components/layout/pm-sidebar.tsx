@@ -23,7 +23,7 @@ export function PmSidebar() {
   return (
     <aside className="flex h-screen w-56 flex-col border-r bg-background">
       <div className="px-4 py-5">
-        <LogoHealthStream className="h-5 w-auto" />
+        <LogoHealthStream className="h-7 w-auto" />
       </div>
       <nav className="flex-1 px-2">
         <Link
