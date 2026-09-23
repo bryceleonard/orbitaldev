@@ -32,7 +32,7 @@ const STATUS_COLOR: Record<MilestoneStatus, string> = {
   completed: 'text-green-600',
 }
 
-const SCHEDULED_STATUSES: MilestoneStatus[] = ['not_started', 'in_progress', 'blocked', 'completed']
+const SCHEDULED_STATUSES: MilestoneStatus[] = ['backlog', 'not_started', 'in_progress', 'blocked', 'completed']
 
 export function MilestonesManager({
   milestones,
