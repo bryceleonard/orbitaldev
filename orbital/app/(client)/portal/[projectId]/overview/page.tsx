@@ -100,7 +100,9 @@ export default function PortalOverviewPage() {
   const hoursConsumed = project.hoursUsed ?? 0
   const budgetPct = budgetPercent(hoursConsumed, project.sow.totalHours)
   const openRisks = risks.filter((r) => r.status === 'open')
-  const sortedMilestones = [...milestones].sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
+  const sortedMilestones = [...milestones]
+    .filter(m => m.status !== 'backlog')
+    .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
 
   const hasBeadsData = beadsIssues.length > 0
 
@@ -188,11 +190,11 @@ export default function PortalOverviewPage() {
       </section>
 
       {/* Milestones — full width */}
-      {milestones.length > 0 && (
+      {sortedMilestones.length > 0 && (
         <section>
           <SectionLabel>Milestones</SectionLabel>
           <div className="flex flex-col gap-6">
-            <MilestonesGantt milestones={milestones} showTooltips />
+            <MilestonesGantt milestones={sortedMilestones} showTooltips />
             <table className="w-full text-sm border rounded-md overflow-hidden">
               <thead>
                 <tr className="border-b bg-muted/50">

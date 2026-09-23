@@ -32,7 +32,7 @@ const STATUS_COLOR: Record<MilestoneStatus, string> = {
   completed: 'text-green-600',
 }
 
-const SCHEDULED_STATUSES: MilestoneStatus[] = ['backlog', 'not_started', 'in_progress', 'blocked', 'completed']
+const ALL_STATUSES: MilestoneStatus[] = ['backlog', 'not_started', 'in_progress', 'blocked', 'completed']
 
 export function MilestonesManager({
   milestones,
@@ -213,7 +213,7 @@ export function MilestonesManager({
                     onChange={(e) => onStatusChange(m, e.target.value as MilestoneStatus)}
                     className={`text-sm border rounded px-2 py-1 bg-background outline-none focus:ring-2 focus:ring-ring/50 disabled:opacity-50 ${STATUS_COLOR[m.status]}`}
                   >
-                    {SCHEDULED_STATUSES.map((s) => (
+                    {ALL_STATUSES.map((s) => (
                       <option key={s} value={s}>{STATUS_LABELS[s]}</option>
                     ))}
                   </select>

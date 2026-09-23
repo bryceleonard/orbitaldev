@@ -7,7 +7,7 @@ vi.mock('react-markdown', () => ({
 
 test('renders content inside a prose wrapper', async () => {
   const { MarkdownBody } = await import('./markdown-body')
-  render(<MarkdownBody content="## Hello\n\nWorld" />)
+  render(<MarkdownBody content={"## Hello\n\nWorld"} />)
   expect(screen.getByTestId('md')).toHaveTextContent('## Hello')
 })
 

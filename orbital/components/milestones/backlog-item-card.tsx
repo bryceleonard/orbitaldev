@@ -52,6 +52,7 @@ export function BacklogItemCard({ milestone, canEdit, onStatusChange, onUpdate, 
         startDate: editStart || undefined,
         endDate: editEnd || undefined,
       })
+      setDateError(false)
       setEditing(false)
     } finally {
       setSaving(false)

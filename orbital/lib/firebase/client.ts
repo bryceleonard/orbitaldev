@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { initializeFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 
 const config = {
@@ -15,5 +15,5 @@ const config = {
 const app = getApps().length === 0 ? initializeApp(config) : getApps()[0]
 
 export const auth = getAuth(app)
-export const db = getFirestore(app)
+export const db = initializeFirestore(app, { ignoreUndefinedProperties: true })
 export const storage = getStorage(app)

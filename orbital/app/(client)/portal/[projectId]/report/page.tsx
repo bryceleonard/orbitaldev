@@ -130,7 +130,9 @@ export default function PortalReportPage() {
     ? Math.min(100, Math.round((hoursConsumed / project.sow.totalHours) * 100))
     : 0
   const openRisks = risks.filter((r) => r.status === 'open')
-  const sortedMilestones = [...milestones].sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
+  const sortedMilestones = [...milestones]
+    .filter(m => m.status !== 'backlog')
+    .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
   const totalHours = resources.reduce((s, r) => s + r.hours, 0)
   const generatedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 
