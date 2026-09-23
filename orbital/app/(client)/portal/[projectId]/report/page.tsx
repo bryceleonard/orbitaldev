@@ -8,6 +8,7 @@ import { listMilestones } from '@/lib/firestore/milestones'
 import { listResources } from '@/lib/firestore/resources'
 import { getLatestBoardCache } from '@/lib/firestore/ado-cache'
 import { BeadsVelocity } from '@/components/boards/beads-velocity'
+import { MarkdownBody } from '@/components/ui/markdown-body'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Printer } from 'lucide-react'
@@ -130,7 +131,9 @@ export default function PortalReportPage() {
     ? Math.min(100, Math.round((hoursConsumed / project.sow.totalHours) * 100))
     : 0
   const openRisks = risks.filter((r) => r.status === 'open')
+  const backlogItems = milestones.filter((m) => m.status === 'backlog')
   const sortedMilestones = [...milestones]
+    .filter((m) => m.status !== 'backlog')
     .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
   const totalHours = resources.reduce((s, r) => s + r.hours, 0)
   const generatedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -319,6 +322,24 @@ export default function PortalReportPage() {
                 ))}
               </tbody>
             </table>
+          </section>
+        )}
+
+        {/* Backlog */}
+        {backlogItems.length > 0 && (
+          <section className="mb-10">
+            <SectionLabel>Backlog</SectionLabel>
+            <div className="flex flex-col gap-3">
+              {backlogItems.map((m) => (
+                <div key={m.id} className="border border-gray-200 rounded-md p-4">
+                  <p className="font-medium text-gray-900 mb-2">{m.name}</p>
+                  {m.description
+                    ? <MarkdownBody content={m.description} />
+                    : <p className="text-sm text-gray-500">No description.</p>
+                  }
+                </div>
+              ))}
+            </div>
           </section>
         )}
 

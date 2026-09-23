@@ -10,6 +10,7 @@ import { CircularProgress } from '@/components/ui/circular-progress'
 import { StatusBadge } from '@/components/status/status-badge'
 import { MilestonesGantt } from '@/components/milestones/milestones-gantt'
 import { BeadsVelocity } from '@/components/boards/beads-velocity'
+import { MarkdownBody } from '@/components/ui/markdown-body'
 import { Badge } from '@/components/ui/badge'
 import type { StatusLevel, MilestoneStatus, BeadsIssue } from '@/lib/types'
 
@@ -100,7 +101,9 @@ export default function PortalOverviewPage() {
   const hoursConsumed = project.hoursUsed ?? 0
   const budgetPct = budgetPercent(hoursConsumed, project.sow.totalHours)
   const openRisks = risks.filter((r) => r.status === 'open')
+  const backlogItems = milestones.filter((m) => m.status === 'backlog')
   const sortedMilestones = [...milestones]
+    .filter((m) => m.status !== 'backlog')
     .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
 
   const hasBeadsData = beadsIssues.length > 0
@@ -218,6 +221,24 @@ export default function PortalOverviewPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </section>
+      )}
+
+      {/* Backlog — card list */}
+      {backlogItems.length > 0 && (
+        <section>
+          <SectionLabel>Backlog</SectionLabel>
+          <div className="flex flex-col gap-3">
+            {backlogItems.map((m) => (
+              <div key={m.id} className="rounded-lg border bg-card p-4">
+                <p className="font-medium mb-2">{m.name}</p>
+                {m.description
+                  ? <MarkdownBody content={m.description} />
+                  : <p className="text-sm text-muted-foreground">No description.</p>
+                }
+              </div>
+            ))}
           </div>
         </section>
       )}
