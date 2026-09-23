@@ -26,8 +26,15 @@ export default function MilestonesPage() {
 
   const inv = () => qc.invalidateQueries({ queryKey: ['milestones', orgId, projectId] })
 
-  async function handleAdd(data: { name: string; startDate: string; endDate: string }) {
-    await addMilestone(orgId!, projectId, { ...data, createdBy: user!.uid })
+  const scheduled = milestones.filter((m) => m.status !== 'backlog')
+
+  async function handleAddMilestone(data: { name: string; startDate: string; endDate: string }) {
+    await addMilestone(orgId!, projectId, { ...data, status: 'not_started', createdBy: user!.uid })
+    await inv()
+  }
+
+  async function handleAddBacklog(data: { name: string; description?: string }) {
+    await addMilestone(orgId!, projectId, { ...data, status: 'backlog', createdBy: user!.uid })
     await inv()
   }
 
@@ -36,7 +43,7 @@ export default function MilestonesPage() {
     await inv()
   }
 
-  async function handleUpdate(id: string, data: { name: string; startDate: string; endDate: string }) {
+  async function handleUpdate(id: string, data: { name: string; startDate?: string; endDate?: string; description?: string }) {
     await updateMilestone(orgId!, projectId, id, data)
     await inv()
   }
@@ -48,17 +55,18 @@ export default function MilestonesPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {milestones.length > 0 && (
+      {scheduled.length > 0 && (
         <div>
           <h2 className="font-semibold mb-4">Timeline</h2>
-          <MilestonesGantt milestones={milestones} />
+          <MilestonesGantt milestones={scheduled} />
         </div>
       )}
 
       <MilestonesManager
         milestones={milestones}
         canEdit={canEdit}
-        onAdd={handleAdd}
+        onAddMilestone={handleAddMilestone}
+        onAddBacklog={handleAddBacklog}
         onStatusChange={handleStatusChange}
         onUpdate={handleUpdate}
         onDelete={handleDelete}
