@@ -131,7 +131,6 @@ export default function PortalReportPage() {
     : 0
   const openRisks = risks.filter((r) => r.status === 'open')
   const sortedMilestones = [...milestones]
-    .filter(m => m.status !== 'backlog')
     .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
   const totalHours = resources.reduce((s, r) => s + r.hours, 0)
   const generatedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })

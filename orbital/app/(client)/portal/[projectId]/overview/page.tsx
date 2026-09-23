@@ -101,7 +101,6 @@ export default function PortalOverviewPage() {
   const budgetPct = budgetPercent(hoursConsumed, project.sow.totalHours)
   const openRisks = risks.filter((r) => r.status === 'open')
   const sortedMilestones = [...milestones]
-    .filter(m => m.status !== 'backlog')
     .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
 
   const hasBeadsData = beadsIssues.length > 0
