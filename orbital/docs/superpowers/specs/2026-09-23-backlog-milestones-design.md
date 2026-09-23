@@ -110,7 +110,7 @@ const scheduled = milestones.filter(m => m.status !== 'backlog').sort(...)
 
 Renders:
 
-1. **Milestones** heading + "Add milestone" button + existing scheduled list (dates required, no description field)
+1. **Milestones** heading + "Add milestone" button + existing scheduled list (dates required, description textarea optional in edit form)
 2. **Backlog** heading + "Add backlog item" button + list of `BacklogItemCard`
 
 Status dropdown on scheduled milestones includes `'backlog'` as a demotion option (no date-clearing needed — dates remain stored but are ignored while in backlog).
