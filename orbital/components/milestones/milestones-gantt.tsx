@@ -30,6 +30,7 @@ function getMondaysInRange(start: Date, end: Date): Date[] {
 }
 
 const STATUS_LABELS: Record<MilestoneStatus, string> = {
+  backlog: 'Backlog',
   not_started: 'Not Started',
   in_progress: 'In Progress',
   blocked: 'Blocked',
@@ -38,6 +39,8 @@ const STATUS_LABELS: Record<MilestoneStatus, string> = {
 
 function barClasses(status: MilestoneStatus): string {
   switch (status) {
+    case 'backlog':
+      return 'bg-muted border border-border text-muted-foreground'
     case 'not_started':
       return 'bg-muted border border-border text-muted-foreground'
     case 'in_progress':
@@ -52,11 +55,16 @@ function barClasses(status: MilestoneStatus): string {
 export function MilestonesGantt({ milestones, showTooltips = false }: Props) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
-  if (milestones.length === 0) {
+  const withDates = milestones.filter(
+    (m): m is Milestone & { startDate: string; endDate: string } =>
+      !!m.startDate && !!m.endDate,
+  )
+
+  if (withDates.length === 0) {
     return <p className="text-sm text-muted-foreground p-4">No milestones yet.</p>
   }
 
-  const sorted = [...milestones].sort((a, b) => a.startDate.localeCompare(b.startDate))
+  const sorted = [...withDates].sort((a, b) => a.startDate.localeCompare(b.startDate))
 
   const dates = sorted.flatMap((m) => [new Date(m.startDate), new Date(m.endDate)])
   const minDate = new Date(Math.min(...dates.map((d) => d.getTime())))

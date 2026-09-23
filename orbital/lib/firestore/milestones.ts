@@ -12,11 +12,17 @@ export async function listMilestones(orgId: string, projectId: string): Promise<
 export async function addMilestone(
   orgId: string,
   projectId: string,
-  data: { name: string; startDate: string; endDate: string; createdBy: string },
+  data: {
+    name: string
+    status: MilestoneStatus
+    startDate?: string
+    endDate?: string
+    description?: string
+    createdBy: string
+  },
 ): Promise<string> {
   const ref = await addDoc(collection(db, path(orgId, projectId)), {
     ...data,
-    status: 'not_started' as MilestoneStatus,
     history: [],
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -28,7 +34,7 @@ export async function updateMilestone(
   orgId: string,
   projectId: string,
   id: string,
-  data: { name?: string; startDate?: string; endDate?: string },
+  data: { name?: string; startDate?: string; endDate?: string; description?: string },
 ): Promise<void> {
   await updateDoc(doc(db, path(orgId, projectId), id), {
     ...data,

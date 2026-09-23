@@ -77,9 +77,10 @@ All paths are relative to `orgs/{orgId}/projects/{projectId}/`.
 |---|---|---|
 | `id` | `string` | |
 | `name` | `string` | |
-| `status` | `'not_started' \| 'in_progress' \| 'blocked' \| 'completed'` | |
-| `startDate` | `string` | |
-| `endDate` | `string` | |
+| `status` | `MilestoneStatus` | `'backlog'` items have no dates |
+| `description` | `string?` | Markdown. Optional on all milestones. |
+| `startDate` | `string?` | Required for non-backlog milestones |
+| `endDate` | `string?` | Required for non-backlog milestones |
 | `history` | `MilestoneHistoryEntry[]` | Status change audit trail |
 | `createdBy` | `string` | uid |
 | `createdAt` | `Timestamp` | |
@@ -231,6 +232,6 @@ adoCache/{docId}
 type AccessLevel    = 'owner' | 'editor' | 'viewer'
 type StatusLevel    = 'on_track' | 'at_risk' | 'off_track'
 type Severity       = 'low' | 'medium' | 'high'
-type MilestoneStatus = 'not_started' | 'in_progress' | 'blocked' | 'completed'
+type MilestoneStatus = 'backlog' | 'not_started' | 'in_progress' | 'blocked' | 'completed'
 type TrackerType    = 'ado' | 'beads'
 ```

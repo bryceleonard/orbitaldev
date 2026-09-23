@@ -5,7 +5,7 @@ vi.mock('firebase/app', () => ({
   getApps: vi.fn(() => []),
 }))
 vi.mock('firebase/auth', () => ({ getAuth: vi.fn(() => ({ type: 'auth' })) }))
-vi.mock('firebase/firestore', () => ({ getFirestore: vi.fn(() => ({ type: 'db' })) }))
+vi.mock('firebase/firestore', () => ({ initializeFirestore: vi.fn(() => ({ type: 'db' })) }))
 vi.mock('firebase/storage', () => ({ getStorage: vi.fn(() => ({ type: 'storage' })) }))
 
 test('exports auth, db, and storage', async () => {

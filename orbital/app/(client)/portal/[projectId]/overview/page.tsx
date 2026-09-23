@@ -44,6 +44,7 @@ const SEVERITY_COLOR: Record<string, string> = {
 }
 
 const MILESTONE_STATUS_LABEL: Record<MilestoneStatus, string> = {
+  backlog:     'Backlog',
   not_started: 'Not Started',
   in_progress: 'In Progress',
   blocked:     'Blocked',
@@ -51,6 +52,7 @@ const MILESTONE_STATUS_LABEL: Record<MilestoneStatus, string> = {
 }
 
 const MILESTONE_STATUS_CLASS: Record<MilestoneStatus, string> = {
+  backlog:     'bg-muted text-muted-foreground border-border',
   not_started: 'bg-muted text-muted-foreground border-border',
   in_progress: 'bg-primary/10 text-primary border-primary/20',
   blocked:     'bg-destructive/10 text-destructive border-destructive/20',
@@ -98,7 +100,9 @@ export default function PortalOverviewPage() {
   const hoursConsumed = project.hoursUsed ?? 0
   const budgetPct = budgetPercent(hoursConsumed, project.sow.totalHours)
   const openRisks = risks.filter((r) => r.status === 'open')
-  const sortedMilestones = [...milestones].sort((a, b) => a.startDate.localeCompare(b.startDate))
+  const sortedMilestones = [...milestones]
+    .filter(m => m.status !== 'backlog')
+    .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
 
   const hasBeadsData = beadsIssues.length > 0
 
@@ -186,11 +190,11 @@ export default function PortalOverviewPage() {
       </section>
 
       {/* Milestones — full width */}
-      {milestones.length > 0 && (
+      {sortedMilestones.length > 0 && (
         <section>
           <SectionLabel>Milestones</SectionLabel>
           <div className="flex flex-col gap-6">
-            <MilestonesGantt milestones={milestones} showTooltips />
+            <MilestonesGantt milestones={sortedMilestones} showTooltips />
             <table className="w-full text-sm border rounded-md overflow-hidden">
               <thead>
                 <tr className="border-b bg-muted/50">
