@@ -167,7 +167,7 @@ export interface HelpfulLink {
   notes?: string
 }
 
-export type MilestoneStatus = 'not_started' | 'in_progress' | 'blocked' | 'completed'
+export type MilestoneStatus = 'backlog' | 'not_started' | 'in_progress' | 'blocked' | 'completed'
 
 export interface MilestoneHistoryEntry {
   timestamp: string
@@ -179,8 +179,9 @@ export interface Milestone {
   id: string
   name: string
   status: MilestoneStatus
-  startDate: string
-  endDate: string
+  startDate?: string
+  endDate?: string
+  description?: string
   history: MilestoneHistoryEntry[]
   createdAt: string
   updatedAt: string

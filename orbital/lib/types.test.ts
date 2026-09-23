@@ -76,3 +76,23 @@ test('Decision interface has required RACI and lifecycle fields', () => {
   expect(d.status).toBe('open')
   expect(d.timesRevisited).toBe(0)
 })
+
+test('MilestoneStatus includes backlog', () => {
+  const s: import('./types').MilestoneStatus = 'backlog'
+  expect(s).toBe('backlog')
+})
+
+test('Milestone allows optional startDate endDate and description', () => {
+  const m: import('./types').Milestone = {
+    id: 'm1',
+    name: 'Research spike',
+    status: 'backlog',
+    history: [],
+    createdAt: '2026-09-23T00:00:00Z',
+    updatedAt: '2026-09-23T00:00:00Z',
+    createdBy: 'uid1',
+  }
+  expect(m.startDate).toBeUndefined()
+  expect(m.endDate).toBeUndefined()
+  expect(m.description).toBeUndefined()
+})
