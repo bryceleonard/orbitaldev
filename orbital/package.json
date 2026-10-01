@@ -12,6 +12,7 @@
     "test:rules": "vitest run lib/firestore/rules.test.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
     "@base-ui/react": "^1.7.0",
     "@tailwindcss/typography": "^0.5.20",
     "@tanstack/react-query": "^5.102.2",
@@ -21,6 +22,7 @@
     "firebase-admin": "^13.10.0",
     "lucide-react": "^1.33.0",
     "next": "16.3.2",
+    "pdf-parse": "^2.4.5",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-markdown": "^10.1.0",
@@ -35,6 +37,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
+    "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.1.0",
