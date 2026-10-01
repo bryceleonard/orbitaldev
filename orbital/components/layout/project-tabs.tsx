@@ -9,7 +9,7 @@ const STATIC_BEFORE = [
   { label: 'SOW',        segment: 'sow' },
   { label: 'Status',     segment: 'status' },
   { label: 'Decisions',  segment: 'decisions' },
-  { label: 'Files',      segment: 'files' },
+  { label: 'Context',    segment: 'files' },
 ]
 
 const STATIC_AFTER = [

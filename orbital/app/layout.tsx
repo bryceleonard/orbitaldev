@@ -14,9 +14,22 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Orbital — HealthStream",
-  description: "Project management workspace",
-};
+  title: 'Orbital — AI Project Intelligence',
+  description:
+    'Drop in your meeting transcripts and files. Orbital reads them, extracts decisions, flags risks, and updates your project — automatically.',
+  keywords: [
+    'meeting transcript AI',
+    'AI project management',
+    'meeting intelligence',
+    'action items from meetings',
+    'AI project assistant',
+  ],
+  openGraph: {
+    title: 'Orbital — AI Project Intelligence',
+    description: 'The AI member of your team that never misses a meeting.',
+    type: 'website',
+  },
+}
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
