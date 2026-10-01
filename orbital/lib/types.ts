@@ -112,6 +112,34 @@ export interface ProjectFile {
   uploadedBy: string
   uploadedAt: string
   sharedWithClient: boolean
+  aiStatus?: 'unprocessed' | 'processing' | 'ready' | 'error'
+  aiSummary?: string
+  aiProcessedAt?: string
+  aiDrafts?: {
+    decisions: Array<{
+      question?: string
+      background?: string
+      outcome?: string
+      priority?: 'low' | 'medium' | 'high'
+      status?: 'open' | 'decided'
+    }>
+    milestones: Array<{
+      name?: string
+      description?: string
+      status?: 'not_started' | 'in_progress' | 'completed' | 'blocked'
+      endDate?: string
+    }>
+    risks: Array<{
+      title?: string
+      description?: string
+      severity?: 'low' | 'medium' | 'high'
+    }>
+    issues: Array<{
+      title?: string
+      description?: string
+      severity?: 'low' | 'medium' | 'high'
+    }>
+  }
 }
 
 export interface OnboardItem {
