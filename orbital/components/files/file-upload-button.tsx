@@ -9,6 +9,12 @@ interface Props {
   onUploaded: () => void
 }
 
+const PROCESSABLE_TYPES = new Set([
+  'text/plain',
+  'text/markdown',
+  'application/pdf',
+])
+
 export function FileUploadButton({ orgId, projectId, onUploaded }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
@@ -27,8 +33,17 @@ export function FileUploadButton({ orgId, projectId, onUploaded }: Props) {
 
       const res = await fetch('/api/files/upload', { method: 'POST', body })
       if (!res.ok) throw new Error((await res.json()).error)
+      const { fileId } = await res.json()
 
       onUploaded()
+
+      if (PROCESSABLE_TYPES.has(file.type)) {
+        fetch('/api/files/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orgId, projectId, fileId }),
+        }).catch(() => {})
+      }
     } catch (e) {
       setError((e as Error).message)
     } finally {
