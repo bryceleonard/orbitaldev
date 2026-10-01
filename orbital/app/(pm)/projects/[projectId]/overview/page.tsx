@@ -1,18 +1,129 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
-import { useQueryClient } from '@tanstack/react-query'
+import { useParams, useRouter } from 'next/navigation'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/use-auth'
 import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
-import { updateProject, archiveProject } from '@/lib/firestore/projects'
+import { listFiles } from '@/lib/firestore/files'
+import { updateProject } from '@/lib/firestore/projects'
 import { ShareDialog } from '@/components/projects/share-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { useRouter } from 'next/navigation'
-import type { TrackerBoard, TrackerType } from '@/lib/types'
+import type { ProjectFile, TrackerBoard, TrackerType } from '@/lib/types'
+
+function StatusBadge({ label, status }: { label: string; status: string }) {
+  const color =
+    status === 'on_track' ? 'text-green-700 border-green-300'
+    : status === 'at_risk' ? 'text-yellow-700 border-yellow-300'
+    : 'text-red-700 border-red-300'
+  return (
+    <Badge variant="outline" className={color}>
+      {label}: {status.replace('_', ' ')}
+    </Badge>
+  )
+}
+
+function IntelligenceFeed({ files }: { files: ProjectFile[] }) {
+  const ready = files
+    .filter((f) => f.aiStatus === 'ready')
+    .sort((a, b) => (b.aiProcessedAt ?? '').localeCompare(a.aiProcessedAt ?? ''))
+    .slice(0, 5)
+
+  if (ready.length === 0) {
+    return (
+      <div className="border border-dashed rounded-md px-6 py-8 text-center">
+        <p className="text-sm text-muted-foreground">
+          Drop your first meeting transcript into Context and Orbital will read it.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {ready.map((f) => {
+        const counts = [
+          f.aiDrafts?.decisions.length && `${f.aiDrafts.decisions.length} decisions`,
+          f.aiDrafts?.milestones.length && `${f.aiDrafts.milestones.length} milestones`,
+          f.aiDrafts?.risks.length && `${f.aiDrafts.risks.length} risks`,
+          f.aiDrafts?.issues.length && `${f.aiDrafts.issues.length} issues`,
+        ].filter(Boolean)
+
+        return (
+          <div key={f.id} className="border rounded-md px-4 py-3 flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">{f.name}</p>
+              <p className="text-xs text-muted-foreground">{f.aiProcessedAt?.slice(0, 10) ?? ''}</p>
+            </div>
+            {f.aiSummary && <p className="text-xs text-muted-foreground">{f.aiSummary}</p>}
+            {counts.length > 0 && (
+              <p className="text-xs text-primary font-medium">{counts.join(' · ')}</p>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function AskOrbital({ orgId, projectId }: { orgId: string; projectId: string }) {
+  const [question, setQuestion] = useState('')
+  const [answer, setAnswer] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!question.trim() || loading) return
+    setLoading(true)
+    setAnswer('')
+    try {
+      const res = await fetch('/api/files/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orgId, projectId, question }),
+      })
+      if (!res.ok || !res.body) {
+        setAnswer('Something went wrong. Try again.')
+        return
+      }
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let full = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        full += decoder.decode(value, { stream: true })
+        const citationIdx = full.lastIndexOf('\nCITATIONS:')
+        setAnswer(citationIdx >= 0 ? full.slice(0, citationIdx) : full)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <Input
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="Ask anything about this project…"
+          disabled={loading}
+          className="flex-1"
+        />
+        <Button type="submit" disabled={loading || !question.trim()}>
+          {loading ? 'Asking…' : 'Ask'}
+        </Button>
+      </form>
+      {answer && (
+        <div className="border rounded-md px-4 py-3 text-sm whitespace-pre-wrap">{answer}</div>
+      )}
+    </div>
+  )
+}
 
 export default function OverviewPage() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -21,12 +132,11 @@ export default function OverviewPage() {
   const qc = useQueryClient()
   const router = useRouter()
   const { data: project } = useProject(orgId, projectId)
-
+  const [shareOpen, setShareOpen] = useState(false)
+  const [archiving, setArchiving] = useState(false)
   const [name, setName] = useState(project?.name ?? '')
   const [description, setDescription] = useState(project?.description ?? '')
-  const [shareOpen, setShareOpen] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [archiving, setArchiving] = useState(false)
 
   useEffect(() => {
     if (project) {
@@ -34,6 +144,12 @@ export default function OverviewPage() {
       setDescription(project.description)
     }
   }, [project])
+
+  const { data: files = [] } = useQuery({
+    queryKey: ['files', orgId, projectId],
+    queryFn: () => listFiles(orgId!, projectId),
+    enabled: !!orgId,
+  })
 
   const isOwner = user && project ? project.members[user.uid] === 'owner' : false
   const canEdit = user && project
@@ -59,34 +175,83 @@ export default function OverviewPage() {
     setArchiving(false)
   }
 
-  if (!project) return <p className="text-muted-foreground">Loading…</p>
+  if (!project) return <p className="text-muted-foreground text-sm">Loading…</p>
 
   return (
-    <div className="max-w-2xl flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="proj-name">Project name</Label>
-        <Input
-          id="proj-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          disabled={!canEdit}
-        />
+    <div className="flex flex-col gap-8 max-w-3xl">
+      {/* Zone 1 — Pulse strip */}
+      {project.statusHeader && (
+        <div className="flex gap-2 flex-wrap">
+          <StatusBadge label="Schedule" status={project.statusHeader.scheduleStatus} />
+          <StatusBadge label="Budget" status={project.statusHeader.budgetStatus} />
+          <StatusBadge label="Scope" status={project.statusHeader.scopeStatus} />
+        </div>
+      )}
+
+      {/* Zone 2 — Intelligence feed */}
+      <div className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Recent Intelligence</h2>
+        <IntelligenceFeed files={files} />
       </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="proj-desc">Description</Label>
-        <Input
-          id="proj-desc"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          disabled={!canEdit}
-        />
-      </div>
-      <div className="flex items-center gap-3">
-        {canEdit && (
-          <Button onClick={handleSave} disabled={saving} className="self-start">
-            {saving ? 'Saving…' : 'Save'}
-          </Button>
-        )}
+
+      {/* Zone 3 — Ask Orbital */}
+      {orgId && (
+        <div className="flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Ask Orbital</h2>
+          <AskOrbital orgId={orgId} projectId={projectId} />
+        </div>
+      )}
+
+      {/* Project settings — below the fold */}
+      <div className="border-t pt-6 flex flex-col gap-6">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Project Settings</h2>
+
+        {/* Name / description editing */}
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="proj-name">Project name</Label>
+            <Input
+              id="proj-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={!canEdit}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="proj-desc">Description</Label>
+            <Input
+              id="proj-desc"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              disabled={!canEdit}
+            />
+          </div>
+          {canEdit && (
+            <Button onClick={handleSave} disabled={saving} className="self-start">
+              {saving ? 'Saving…' : 'Save'}
+            </Button>
+          )}
+        </div>
+
+        {/* Members */}
+        <div>
+          <h3 className="font-medium mb-2 text-sm">Members</h3>
+          <ul className="flex flex-col gap-1 mb-3">
+            {Object.entries(project.members).map(([uid, role]) => (
+              <li key={uid} className="flex items-center gap-2 text-sm">
+                <span className="font-mono text-xs text-muted-foreground">{uid}</span>
+                <Badge variant="outline">{role}</Badge>
+              </li>
+            ))}
+          </ul>
+          {isOwner && (
+            <Button variant="outline" size="sm" onClick={() => setShareOpen(true)}>
+              Add member
+            </Button>
+          )}
+        </div>
+
+        {/* Archive */}
         {isOwner && (
           <Button
             variant="outline"
@@ -99,30 +264,7 @@ export default function OverviewPage() {
         )}
       </div>
 
-      <div>
-        <h2 className="font-medium mb-2">Members</h2>
-        <ul className="flex flex-col gap-1 mb-3">
-          {Object.entries(project.members).map(([uid, role]) => (
-            <li key={uid} className="flex items-center gap-2 text-sm">
-              <span className="font-mono text-xs text-muted-foreground">{uid}</span>
-              <Badge variant="outline">{role}</Badge>
-            </li>
-          ))}
-        </ul>
-        {isOwner && (
-          <Button variant="outline" size="sm" onClick={() => setShareOpen(true)}>
-            Add member
-          </Button>
-        )}
-      </div>
-
-      <ShareDialog
-        projectId={projectId}
-        open={shareOpen}
-        onOpenChange={setShareOpen}
-        onSuccess={() => qc.invalidateQueries({ queryKey: ['project', orgId, projectId] })}
-      />
-
+      {/* Boards — owners only */}
       {isOwner && orgId && (
         <BoardsCard
           orgId={orgId}
@@ -131,6 +273,13 @@ export default function OverviewPage() {
           onSaved={() => qc.invalidateQueries({ queryKey: ['project', orgId, projectId] })}
         />
       )}
+
+      <ShareDialog
+        projectId={projectId}
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        onSuccess={() => qc.invalidateQueries({ queryKey: ['project', orgId, projectId] })}
+      />
     </div>
   )
 }
