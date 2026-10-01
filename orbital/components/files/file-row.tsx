@@ -14,7 +14,6 @@ interface Props {
 
 const PROCESSABLE = new Set([
   'text/plain', 'text/markdown', 'application/pdf',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 ])
 
 function draftCount(file: ProjectFile): number {

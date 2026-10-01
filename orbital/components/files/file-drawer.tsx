@@ -89,9 +89,14 @@ export function FileDrawer({ file, orgId, projectId, uid, onClose, onDraftsChang
     await persistDrafts(next)
   }
 
-  function dismiss<K extends keyof AiDrafts>(section: K, idx: number) {
+  async function dismiss<K extends keyof AiDrafts>(section: K, idx: number) {
     const next = { ...drafts, [section]: (drafts[section] as unknown[]).filter((_, i) => i !== idx) }
-    persistDrafts(next as AiDrafts)
+    try {
+      await persistDrafts(next as AiDrafts)
+    } catch {
+      // revert local state on failure
+      setDrafts(drafts)
+    }
   }
 
   const totalDrafts =

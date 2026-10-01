@@ -37,11 +37,18 @@ export default function FilesPage() {
 
   async function handleProcess(fileId: string) {
     if (!orgId) return
-    await fetch('/api/files/process', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orgId, projectId, fileId }),
-    })
+    try {
+      const res = await fetch('/api/files/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orgId, projectId, fileId }),
+      })
+      if (!res.ok) {
+        console.error('[handleProcess] failed', res.status)
+      }
+    } catch (e) {
+      console.error('[handleProcess] error', e)
+    }
     inv()
   }
 

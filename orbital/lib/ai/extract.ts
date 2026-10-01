@@ -64,6 +64,6 @@ export async function extractIntelligence(text: string): Promise<ExtractionResul
     raw = msg.content.find((b) => b.type === 'text')?.text ?? ''
     return JSON.parse(raw) as ExtractionResult
   } catch {
-    return EMPTY
+    return { summary: '', decisions: [], milestones: [], risks: [], issues: [] }
   }
 }
