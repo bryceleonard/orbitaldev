@@ -1,14 +1,15 @@
 'use client'
+import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/use-auth'
 import { useOrgId } from '@/hooks/use-org'
 import { useProject } from '@/hooks/use-project'
-import { listFiles, updateFileShared, deleteFile } from '@/lib/firestore/files'
+import { listFiles, deleteFile } from '@/lib/firestore/files'
 import { FileUploadButton } from '@/components/files/file-upload-button'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Trash2 } from 'lucide-react'
+import { FileRow } from '@/components/files/file-row'
+import { FileDrawer } from '@/components/files/file-drawer'
+import type { ProjectFile } from '@/lib/types'
 
 export default function FilesPage() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -16,11 +17,16 @@ export default function FilesPage() {
   const orgId = useOrgId()
   const qc = useQueryClient()
   const { data: project } = useProject(orgId, projectId)
+  const [selected, setSelected] = useState<ProjectFile | null>(null)
 
   const { data: files = [], isLoading } = useQuery({
     queryKey: ['files', orgId, projectId],
     queryFn: () => listFiles(orgId!, projectId),
     enabled: !!orgId,
+    refetchInterval: (query) => {
+      const data = query.state.data as ProjectFile[] | undefined
+      return data?.some((f) => f.aiStatus === 'processing') ? 3000 : false
+    },
   })
 
   const canEdit = user && project
@@ -29,60 +35,60 @@ export default function FilesPage() {
 
   const inv = () => qc.invalidateQueries({ queryKey: ['files', orgId, projectId] })
 
-  async function toggleShare(id: string, current: boolean) {
+  async function handleProcess(fileId: string) {
     if (!orgId) return
-    await updateFileShared(orgId, projectId, id, !current)
+    await fetch('/api/files/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orgId, projectId, fileId }),
+    })
     inv()
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(fileId: string) {
     if (!orgId) return
-    await deleteFile(orgId, projectId, id)
+    await deleteFile(orgId, projectId, fileId)
+    if (selected?.id === fileId) setSelected(null)
     inv()
   }
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold">Context Files</h2>
+        <h2 className="font-semibold">Context</h2>
         {canEdit && orgId && (
           <FileUploadButton orgId={orgId} projectId={projectId} onUploaded={inv} />
         )}
       </div>
 
-      {isLoading
-        ? <p className="text-muted-foreground text-sm">Loading…</p>
-        : files.length === 0 && <p className="text-muted-foreground text-sm">No files uploaded yet.</p>
-      }
+      {isLoading && <p className="text-muted-foreground text-sm">Loading…</p>}
+      {!isLoading && files.length === 0 && (
+        <p className="text-muted-foreground text-sm">No files uploaded yet.</p>
+      )}
 
       <div className="flex flex-col gap-2">
         {files.map((f) => (
-          <div key={f.id} className="flex items-center justify-between border rounded-md px-4 py-3">
-            <div>
-              <p className="text-sm font-medium">{f.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {(f.sizeBytes / 1024).toFixed(0)} KB · {f.uploadedAt?.slice(0, 10) ?? '—'}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {f.sharedWithClient
-                ? <Badge variant="outline" className="text-green-700 border-green-300">Shared</Badge>
-                : <Badge variant="outline" className="text-muted-foreground">Internal</Badge>
-              }
-              {canEdit && (
-                <>
-                  <Button variant="outline" size="sm" onClick={() => toggleShare(f.id, f.sharedWithClient)}>
-                    {f.sharedWithClient ? 'Unshare' : 'Share'}
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(f.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
+          <FileRow
+            key={f.id}
+            file={f}
+            canEdit={canEdit}
+            onProcess={handleProcess}
+            onSelect={setSelected}
+            onDelete={handleDelete}
+          />
         ))}
       </div>
+
+      {selected && orgId && user && (
+        <FileDrawer
+          file={selected}
+          orgId={orgId}
+          projectId={projectId}
+          uid={user.uid}
+          onClose={() => setSelected(null)}
+          onDraftsChanged={inv}
+        />
+      )}
     </div>
   )
 }
