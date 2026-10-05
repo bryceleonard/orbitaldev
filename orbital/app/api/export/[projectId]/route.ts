@@ -156,7 +156,7 @@ function ganttHtml(milestones: Milestone[]): string {
     const rowBg = i % 2 === 1 ? '#f9fafb' : '#fff'
     return `
       <div style="display:flex;border-bottom:1px solid #f3f4f6;height:48px;align-items:center;background:${rowBg};">
-        <div style="flex-shrink:0;width:220px;padding:0 12px;font-size:13px;font-weight:500;color:#111827;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${esc(m.name)}</div>
+        <div style="flex-shrink:0;width:220px;padding:0 12px;font-size:13px;font-weight:500;color:#111827;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;position:sticky;left:0;z-index:1;background:${rowBg};border-right:1px solid #f3f4f6;">${esc(m.name)}</div>
         <div style="flex:1;position:relative;height:100%;">
           ${gridlines()}
           <div style="position:absolute;top:12px;height:24px;left:${left}%;width:${width}%;background:${bg};border:1px solid ${border};border-radius:4px;display:flex;align-items:center;padding:0 8px;overflow:hidden;">
@@ -169,8 +169,8 @@ function ganttHtml(milestones: Milestone[]): string {
   return `
     <div style="overflow-x:auto;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:32px;">
       <div style="min-width:${minWidth}px;">
-        <div style="display:flex;border-bottom:1px solid #e5e7eb;">
-          <div style="flex-shrink:0;width:220px;border-right:1px solid #f3f4f6;"></div>
+        <div style="display:flex;border-bottom:1px solid #e5e7eb;background:#fff;">
+          <div style="flex-shrink:0;width:220px;border-right:1px solid #f3f4f6;position:sticky;left:0;z-index:2;background:#fff;"></div>
           <div style="flex:1;position:relative;height:32px;">${headerLabels}</div>
         </div>
         ${rows}
@@ -290,7 +290,7 @@ function generateHtml(
   </style>
 </head>
 <body>
-  <div style="max-width:900px;margin:0 auto;padding:40px 24px;">
+  <div style="max-width:960px;margin:0 auto;padding:20px 16px;">
 
     <!-- Header -->
     <header style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;margin-bottom:32px;border-bottom:1px solid #e5e7eb;">
