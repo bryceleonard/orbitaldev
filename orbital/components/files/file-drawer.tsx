@@ -68,6 +68,7 @@ export function FileDrawer({ file, orgId, projectId, uid, onClose, onDraftsChang
   async function acceptRisk(idx: number) {
     const draft = drafts.risks[idx]
     await addRisk(orgId, projectId, {
+      kind: 'risk',
       title: draft.title ?? 'New Risk',
       owner: '', severity: draft.severity ?? 'medium',
       description: draft.description ?? '',

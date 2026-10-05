@@ -50,6 +50,11 @@ const SEVERITY_COLOR: Record<string, string> = {
   high:   'bg-red-100 text-red-800 border-red-200',
 }
 
+const KIND_COLOR: Record<string, string> = {
+  risk:  'bg-amber-50 text-amber-700 border-amber-200',
+  issue: 'bg-red-50 text-red-700 border-red-200',
+}
+
 const MILESTONE_STATUS_LABEL: Record<MilestoneStatus, string> = {
   backlog:     'Backlog',
   not_started: 'Not Started',
@@ -130,7 +135,10 @@ export default function PortalReportPage() {
   const budgetPct = project.sow.totalHours
     ? Math.min(100, Math.round((hoursConsumed / project.sow.totalHours) * 100))
     : 0
-  const openRisks = risks.filter((r) => r.status === 'open' && !!r.title)
+  const visibleRisks = risks.filter((r) => !!r.title).sort((a, b) => {
+    if (a.status === b.status) return 0
+    return a.status === 'open' ? -1 : 1
+  })
   const backlogItems = milestones.filter((m) => m.status === 'backlog')
   const sortedMilestones = [...milestones]
     .filter((m) => m.status !== 'backlog')
@@ -261,32 +269,49 @@ export default function PortalReportPage() {
           </section>
         )}
 
-        {/* Risks */}
+        {/* Risks & Issues */}
         <section className="mb-10">
-          <SectionLabel>Risks</SectionLabel>
-          {openRisks.length === 0 ? (
-            <p className="text-sm text-gray-500">No open risks.</p>
+          <SectionLabel>Risks &amp; Issues</SectionLabel>
+          {visibleRisks.length === 0 ? (
+            <p className="text-sm text-gray-500">No risks or issues.</p>
           ) : (
             <table className="w-full text-sm border border-gray-200 rounded-md overflow-hidden">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="text-left px-4 py-2 font-medium text-gray-500 w-20">Type</th>
                   <th className="text-left px-4 py-2 font-medium text-gray-500 w-24">Severity</th>
-                  <th className="text-left px-4 py-2 font-medium text-gray-500 w-32">Owner</th>
-                  <th className="text-left px-4 py-2 font-medium text-gray-500">Risk</th>
-                  <th className="text-left px-4 py-2 font-medium text-gray-500">Description</th>
+                  <th className="text-left px-4 py-2 font-medium text-gray-500 w-24">Status</th>
+                  <th className="text-left px-4 py-2 font-medium text-gray-500 w-28">Owner</th>
+                  <th className="text-left px-4 py-2 font-medium text-gray-500">Title</th>
+                  <th className="text-left px-4 py-2 font-medium text-gray-500">Description / Resolution</th>
                 </tr>
               </thead>
               <tbody>
-                {openRisks.map((r, i) => (
+                {visibleRisks.map((r, i) => (
                   <tr key={r.id} className={i % 2 === 0 ? '' : 'bg-gray-50/50'}>
+                    <td className="px-4 py-2">
+                      <Badge variant="outline" className={KIND_COLOR[r.kind ?? 'risk']}>
+                        {(r.kind ?? 'risk').toUpperCase()}
+                      </Badge>
+                    </td>
                     <td className="px-4 py-2">
                       <Badge variant="outline" className={SEVERITY_COLOR[r.severity] ?? ''}>
                         {r.severity.toUpperCase()}
                       </Badge>
                     </td>
+                    <td className="px-4 py-2">
+                      <Badge variant="outline" className={r.status === 'resolved' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-600 border-gray-200'}>
+                        {r.status === 'resolved' ? 'Resolved' : 'Open'}
+                      </Badge>
+                    </td>
                     <td className="px-4 py-2 text-gray-600">{r.owner || '—'}</td>
                     <td className="px-4 py-2 font-medium text-gray-900">{r.title}</td>
-                    <td className="px-4 py-2 text-gray-600">{r.description}</td>
+                    <td className="px-4 py-2 text-gray-600">
+                      {r.description}
+                      {r.resolution && (
+                        <p className="text-green-700 mt-1"><span className="font-medium">Resolution:</span> {r.resolution}</p>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

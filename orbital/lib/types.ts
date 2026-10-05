@@ -153,11 +153,13 @@ export interface OnboardItem {
 
 export interface Risk {
   id: string
+  kind: 'risk' | 'issue'
   title: string
   owner: string
   severity: Severity
   description: string
   status: OpenResolved
+  resolution?: string
   createdAt: string
   updatedAt: string
 }

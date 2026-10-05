@@ -133,11 +133,13 @@ export default function StatusPage() {
         <h2 className="font-semibold mb-3">Risks and Issues</h2>
         <CrudTable<Risk>
           columns={[
+            { key: 'kind', label: 'Type', type: 'select', options: ['risk', 'issue'] },
             { key: 'title', label: 'Title', type: 'text' },
             { key: 'owner', label: 'Owner', type: 'text' },
             { key: 'severity', label: 'Severity', type: 'select', options: ['low', 'medium', 'high'] },
             { key: 'description', label: 'Description', type: 'text' },
             { key: 'status', label: 'Status', type: 'select', options: ['open', 'resolved'] },
+            { key: 'resolution', label: 'Resolution', type: 'text' },
           ]}
           rows={risks}
           canEdit={canEdit}

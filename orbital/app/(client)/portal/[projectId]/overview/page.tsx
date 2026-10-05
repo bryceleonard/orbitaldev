@@ -44,6 +44,11 @@ const SEVERITY_COLOR: Record<string, string> = {
   high:   'bg-red-100 text-red-800 border-red-200',
 }
 
+const KIND_COLOR: Record<string, string> = {
+  risk:  'bg-amber-50 text-amber-700 border-amber-200',
+  issue: 'bg-red-50 text-red-700 border-red-200',
+}
+
 const MILESTONE_STATUS_LABEL: Record<MilestoneStatus, string> = {
   backlog:     'Backlog',
   not_started: 'Not Started',
@@ -100,7 +105,10 @@ export default function PortalOverviewPage() {
   const { elapsed: daysElapsed, total: totalDays } = scheduleDays(project.sow)
   const hoursConsumed = project.hoursUsed ?? 0
   const budgetPct = budgetPercent(hoursConsumed, project.sow.totalHours)
-  const openRisks = risks.filter((r) => r.status === 'open' && !!r.title)
+  const visibleRisks = risks.filter((r) => !!r.title).sort((a, b) => {
+    if (a.status === b.status) return 0
+    return a.status === 'open' ? -1 : 1
+  })
   const backlogItems = milestones.filter((m) => m.status === 'backlog')
   const sortedMilestones = [...milestones]
     .filter((m) => m.status !== 'backlog')
@@ -162,26 +170,38 @@ export default function PortalOverviewPage() {
         )}
       </div>
 
-      {/* Risks — full width */}
+      {/* Risks & Issues — full width */}
       <section>
-        <SectionLabel>Risks</SectionLabel>
+        <SectionLabel>Risks &amp; Issues</SectionLabel>
         <div className="bg-card border rounded-md p-4">
-          {openRisks.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No open risks.</p>
+          {visibleRisks.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No risks or issues.</p>
           ) : (
             <ul className="flex flex-col divide-y divide-border">
-              {openRisks.map((r) => (
-                <li key={r.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
-                  <Badge
-                    variant="outline"
-                    className={`shrink-0 mt-0.5 ${SEVERITY_COLOR[r.severity] ?? ''}`}
-                  >
-                    {r.severity.toUpperCase()}
-                  </Badge>
-                  <div>
-                    <p className="text-sm font-medium leading-snug">{r.title}</p>
+              {visibleRisks.map((r) => (
+                <li key={r.id} className={`flex items-start gap-3 py-3 first:pt-0 last:pb-0 ${r.status === 'resolved' ? 'opacity-60' : ''}`}>
+                  <div className="flex flex-col gap-1 shrink-0 mt-0.5">
+                    <Badge variant="outline" className={KIND_COLOR[r.kind ?? 'risk']}>
+                      {(r.kind ?? 'risk').toUpperCase()}
+                    </Badge>
+                    <Badge variant="outline" className={SEVERITY_COLOR[r.severity] ?? ''}>
+                      {r.severity.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="text-sm font-medium leading-snug">{r.title}</p>
+                      {r.status === 'resolved' && (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[10px]">Resolved</Badge>
+                      )}
+                    </div>
                     {r.description && (
-                      <p className="text-xs text-muted-foreground mt-0.5">{r.description}</p>
+                      <p className="text-xs text-muted-foreground">{r.description}</p>
+                    )}
+                    {r.resolution && (
+                      <p className="text-xs text-green-700 mt-1">
+                        <span className="font-medium">Resolution:</span> {r.resolution}
+                      </p>
                     )}
                   </div>
                 </li>

@@ -224,7 +224,10 @@ function generateHtml(
     ? Math.min(100, Math.round((hoursConsumed / project.sow.totalHours) * 100))
     : 0
 
-  const openRisks = risks.filter((r) => r.status === 'open' && !!r.title)
+  const visibleRisks = risks.filter((r) => !!r.title).sort((a, b) => {
+    if (a.status === b.status) return 0
+    return a.status === 'open' ? -1 : 1
+  })
   const sortedMilestones = [...milestones]
     .filter((m) => m.status !== 'backlog')
     .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
@@ -245,13 +248,25 @@ function generateHtml(
       <td style="padding:8px 12px;text-align:right;font-family:monospace;color:#4b5563;">${r.currentHours ?? 0}</td>
     </tr>`).join('')
 
-  const riskRows = openRisks.map((r, i) => `
-    <tr style="${i % 2 === 1 ? 'background:#f9fafb;' : ''}">
+  const KIND_COLOR_EXPORT: Record<string, string> = {
+    risk:  '#d97706',
+    issue: '#dc2626',
+  }
+
+  const riskRows = visibleRisks.map((r, i) => {
+    const kindColor = KIND_COLOR_EXPORT[r.kind ?? 'risk'] ?? '#6b7280'
+    const descCell = r.description
+      + (r.resolution ? `<br><span style="color:#15803d;font-size:11px;"><strong>Resolution:</strong> ${esc(r.resolution)}</span>` : '')
+    return `
+    <tr style="${i % 2 === 1 ? 'background:#f9fafb;' : ''}${r.status === 'resolved' ? 'opacity:0.7;' : ''}">
+      <td style="padding:8px 12px;">${badge((r.kind ?? 'risk').toUpperCase(), kindColor)}</td>
       <td style="padding:8px 12px;">${badge(r.severity.toUpperCase(), SEVERITY_COLOR[r.severity] ?? '#6b7280')}</td>
+      <td style="padding:8px 12px;">${badge(r.status === 'resolved' ? 'Resolved' : 'Open', r.status === 'resolved' ? '#15803d' : '#6b7280')}</td>
       <td style="padding:8px 12px;color:#4b5563;">${esc(r.owner)}</td>
       <td style="padding:8px 12px;font-weight:500;color:#111827;">${esc(r.title)}</td>
-      <td style="padding:8px 12px;color:#4b5563;">${esc(r.description)}</td>
-    </tr>`).join('')
+      <td style="padding:8px 12px;color:#4b5563;">${descCell}</td>
+    </tr>`
+  }).join('')
 
   const milestoneRows = sortedMilestones.map((m, i) => `
     <tr style="${i % 2 === 1 ? 'background:#f9fafb;' : ''}">
@@ -341,18 +356,20 @@ function generateHtml(
       </table>
     </section>` : ''}
 
-    <!-- Risks -->
+    <!-- Risks & Issues -->
     <section style="margin-bottom:40px;">
-      ${sectionLabel('Risks')}
-      ${openRisks.length === 0
-        ? '<p style="font-size:13px;color:#6b7280;">No open risks.</p>'
+      ${sectionLabel('Risks &amp; Issues')}
+      ${visibleRisks.length === 0
+        ? '<p style="font-size:13px;color:#6b7280;">No risks or issues.</p>'
         : `<table style="${tableStyle}">
           <thead>
             <tr>
-              <th style="${thStyle}width:90px;">Severity</th>
-              <th style="${thStyle}width:120px;">Owner</th>
-              <th style="${thStyle}">Risk</th>
-              <th style="${thStyle}">Description</th>
+              <th style="${thStyle}width:70px;">Type</th>
+              <th style="${thStyle}width:80px;">Severity</th>
+              <th style="${thStyle}width:80px;">Status</th>
+              <th style="${thStyle}width:110px;">Owner</th>
+              <th style="${thStyle}">Title</th>
+              <th style="${thStyle}">Description / Resolution</th>
             </tr>
           </thead>
           <tbody>${riskRows}</tbody>
