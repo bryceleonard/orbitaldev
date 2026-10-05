@@ -130,7 +130,7 @@ export default function PortalReportPage() {
   const budgetPct = project.sow.totalHours
     ? Math.min(100, Math.round((hoursConsumed / project.sow.totalHours) * 100))
     : 0
-  const openRisks = risks.filter((r) => r.status === 'open')
+  const openRisks = risks.filter((r) => r.status === 'open' && !!r.title)
   const backlogItems = milestones.filter((m) => m.status === 'backlog')
   const sortedMilestones = [...milestones]
     .filter((m) => m.status !== 'backlog')

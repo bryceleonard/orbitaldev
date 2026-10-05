@@ -100,7 +100,7 @@ export default function PortalOverviewPage() {
   const { elapsed: daysElapsed, total: totalDays } = scheduleDays(project.sow)
   const hoursConsumed = project.hoursUsed ?? 0
   const budgetPct = budgetPercent(hoursConsumed, project.sow.totalHours)
-  const openRisks = risks.filter((r) => r.status === 'open')
+  const openRisks = risks.filter((r) => r.status === 'open' && !!r.title)
   const backlogItems = milestones.filter((m) => m.status === 'backlog')
   const sortedMilestones = [...milestones]
     .filter((m) => m.status !== 'backlog')

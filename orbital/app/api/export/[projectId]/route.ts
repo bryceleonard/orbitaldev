@@ -224,7 +224,7 @@ function generateHtml(
     ? Math.min(100, Math.round((hoursConsumed / project.sow.totalHours) * 100))
     : 0
 
-  const openRisks = risks.filter((r) => r.status === 'open')
+  const openRisks = risks.filter((r) => r.status === 'open' && !!r.title)
   const sortedMilestones = [...milestones]
     .filter((m) => m.status !== 'backlog')
     .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
