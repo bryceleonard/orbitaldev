@@ -87,6 +87,99 @@ const SEVERITY_COLOR: Record<string, string> = {
   high: '#dc2626',
 }
 
+// --- Gantt helpers (mirrors milestones-gantt.tsx logic) ---
+
+function addDays(d: Date, n: number): Date {
+  const r = new Date(d)
+  r.setDate(r.getDate() + n)
+  return r
+}
+
+function daysFrac(rangeStart: Date, date: Date, totalDays: number): number {
+  return Math.max(0, Math.min(1, (date.getTime() - rangeStart.getTime()) / (86_400_000 * totalDays)))
+}
+
+function getMondaysInRange(start: Date, end: Date): Date[] {
+  const mondays: Date[] = []
+  const cur = new Date(start)
+  const dow = cur.getDay()
+  if (dow !== 1) cur.setDate(cur.getDate() + (dow === 0 ? 1 : 8 - dow))
+  while (cur <= end) { mondays.push(new Date(cur)); cur.setDate(cur.getDate() + 7) }
+  return mondays
+}
+
+const GANTT_BAR: Record<MilestoneStatus, { bg: string; border: string; color: string }> = {
+  backlog:     { bg: '#f3f4f6', border: '#e5e7eb', color: '#6b7280' },
+  not_started: { bg: '#f3f4f6', border: '#e5e7eb', color: '#6b7280' },
+  in_progress: { bg: '#eff6ff', border: '#bfdbfe', color: '#2563eb' },
+  blocked:     { bg: '#fef2f2', border: '#fecaca', color: '#dc2626' },
+  completed:   { bg: '#dcfce7', border: '#86efac', color: '#15803d' },
+}
+
+function ganttHtml(milestones: Milestone[]): string {
+  const withDates = milestones.filter(
+    (m): m is Milestone & { startDate: string; endDate: string } =>
+      m.status !== 'backlog' && !!m.startDate && !!m.endDate,
+  )
+  if (withDates.length === 0) return ''
+
+  const sorted = [...withDates].sort((a, b) => a.startDate.localeCompare(b.startDate))
+  const allDates = sorted.flatMap((m) => [new Date(m.startDate), new Date(m.endDate)])
+  const minDate = new Date(Math.min(...allDates.map((d) => d.getTime())))
+  const maxDate = new Date(Math.max(...allDates.map((d) => d.getTime())))
+  const rangeStart = addDays(minDate, -7)
+  const rangeEnd = addDays(maxDate, 7)
+  const totalDays = (rangeEnd.getTime() - rangeStart.getTime()) / 86_400_000
+  const mondays = getMondaysInRange(rangeStart, rangeEnd)
+  const weeks = mondays.length
+  const minWidth = Math.max(700, weeks * 80 + 220)
+
+  const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+
+  const headerLabels = mondays.map((m) => {
+    const left = (daysFrac(rangeStart, m, totalDays) * 100).toFixed(2)
+    return `<span style="position:absolute;top:4px;font-size:11px;color:#9ca3af;user-select:none;left:${left}%;transform:translateX(-50%);">${fmt(m)}</span>`
+  }).join('')
+
+  const gridlines = (extra = '') => mondays.map((m) => {
+    const left = (daysFrac(rangeStart, m, totalDays) * 100).toFixed(2)
+    return `<div style="position:absolute;top:0;bottom:0;left:${left}%;border-left:1px solid #f3f4f6;${extra}"></div>`
+  }).join('')
+
+  const rows = sorted.map((m, i) => {
+    const startFrac = daysFrac(rangeStart, new Date(m.startDate), totalDays)
+    const endFrac = daysFrac(rangeStart, new Date(m.endDate), totalDays)
+    const widthFrac = Math.max(0.01, endFrac - startFrac)
+    const { bg, border, color } = GANTT_BAR[m.status]
+    const left = (startFrac * 100).toFixed(2)
+    const width = (widthFrac * 100).toFixed(2)
+    const rowBg = i % 2 === 1 ? '#f9fafb' : '#fff'
+    return `
+      <div style="display:flex;border-bottom:1px solid #f3f4f6;height:48px;align-items:center;background:${rowBg};">
+        <div style="flex-shrink:0;width:220px;padding:0 12px;font-size:13px;font-weight:500;color:#111827;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${esc(m.name)}</div>
+        <div style="flex:1;position:relative;height:100%;">
+          ${gridlines()}
+          <div style="position:absolute;top:12px;height:24px;left:${left}%;width:${width}%;background:${bg};border:1px solid ${border};border-radius:4px;display:flex;align-items:center;padding:0 8px;overflow:hidden;">
+            <span style="font-size:11px;color:${color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(m.name)}</span>
+          </div>
+        </div>
+      </div>`
+  }).join('')
+
+  return `
+    <div style="overflow-x:auto;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:32px;">
+      <div style="min-width:${minWidth}px;">
+        <div style="display:flex;border-bottom:1px solid #e5e7eb;">
+          <div style="flex-shrink:0;width:220px;border-right:1px solid #f3f4f6;"></div>
+          <div style="flex:1;position:relative;height:32px;">${headerLabels}</div>
+        </div>
+        ${rows}
+      </div>
+    </div>`
+}
+
+// -----------------------------------------------------------
+
 function esc(s: string | undefined | null): string {
   if (!s) return ''
   return s
@@ -270,6 +363,7 @@ function generateHtml(
     <!-- Milestones -->
     <section style="margin-bottom:40px;">
       ${sectionLabel('Milestones')}
+      ${ganttHtml(milestones)}
       <table style="${tableStyle}">
         <thead>
           <tr>
