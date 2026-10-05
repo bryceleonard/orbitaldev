@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Printer } from 'lucide-react'
+import { Printer, FileCode2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TrackerBoard } from '@/lib/types'
 
@@ -51,15 +51,25 @@ export function PortalProjectTabs({
           )
         })}
       </div>
-      <Link
-        href={`/portal/${projectId}/report`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-1.5 px-3 py-2 mb-px text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <Printer className="h-3.5 w-3.5" />
-        Export PDF
-      </Link>
+      <div className="flex items-center gap-1">
+        <Link
+          href={`/portal/${projectId}/report`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-2 mb-px text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Printer className="h-3.5 w-3.5" />
+          Export PDF
+        </Link>
+        <a
+          href={`/api/export/${projectId}`}
+          download
+          className="flex items-center gap-1.5 px-3 py-2 mb-px text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <FileCode2 className="h-3.5 w-3.5" />
+          Export HTML
+        </a>
+      </div>
     </nav>
   )
 }
