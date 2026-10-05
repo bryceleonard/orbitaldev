@@ -89,7 +89,7 @@ export function CrudTable<T extends { id: string }>({ columns, rows, canEdit, on
         <select
           value={String(val ?? '')}
           onChange={(e) => setEditField(col.key as string, e.target.value)}
-          className="border rounded px-2 py-1 text-sm w-full"
+          className="border rounded px-2 py-1 text-sm w-full min-w-[80px]"
         >
           {col.options?.map((o) => <option key={o} value={o}>{o}</option>)}
         </select>
@@ -146,7 +146,8 @@ export function CrudTable<T extends { id: string }>({ columns, rows, canEdit, on
         />
       )
     }
-    return <span className="text-sm">{String(val ?? '')}</span>
+    const display = (col.type === 'select' && !val) ? (col.options?.[0] ?? '') : val
+    return <span className="text-sm">{String(display ?? '')}</span>
   }
 
   function renderDraftCell(col: ColumnDef<T>) {
@@ -165,7 +166,7 @@ export function CrudTable<T extends { id: string }>({ columns, rows, canEdit, on
         <select
           value={String(val ?? '')}
           onChange={(e) => setDraftField(col.key as string, e.target.value)}
-          className="border rounded px-2 py-1 text-sm w-full"
+          className="border rounded px-2 py-1 text-sm w-full min-w-[80px]"
         >
           {col.options?.map((o) => <option key={o} value={o}>{o}</option>)}
         </select>
