@@ -159,7 +159,7 @@ export async function GET(
     }
 
     let payload: unknown
-    if (type === 'backlog') payload = await fetchBacklog(board.adoOrgUrl, board.adoProject, pat)
+    if (type === 'backlog') payload = await fetchBacklog(board.adoOrgUrl, board.adoProject, board.adoTeam, pat)
     else if (type === 'sprint') {
       try {
         payload = await fetchSprint(board.adoOrgUrl, board.adoProject, board.adoTeam, pat)

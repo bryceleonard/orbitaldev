@@ -45,13 +45,15 @@ export interface AdoWorkItem {
 export async function fetchBacklog(
   adoOrgUrl: string,
   adoProject: string,
+  adoTeam: string,
   pat: string,
 ): Promise<{ value: AdoWorkItem[] }> {
-  const wiqlUrl = `${adoOrgUrl}/${adoProject}/_apis/wit/wiql?api-version=${API_VERSION}`
+  const wiqlUrl = `${adoOrgUrl}/${adoProject}/${adoTeam}/_apis/wit/wiql?api-version=${API_VERSION}`
   const wiqlResult = await adoPost(wiqlUrl, pat, {
     query:
       "SELECT [System.Id] " +
       "FROM WorkItems WHERE [System.TeamProject] = @project " +
+      "AND [System.AreaPath] UNDER @TeamAreas " +
       "AND [System.WorkItemType] IN ('Epic','User Story') " +
       "ORDER BY [Microsoft.VSTS.Common.Priority] ASC, [System.Id] ASC",
   }) as { workItems?: { id: number }[] }
