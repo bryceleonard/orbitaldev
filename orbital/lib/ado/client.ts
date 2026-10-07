@@ -67,7 +67,7 @@ export async function fetchBacklog(
       `SELECT [System.Id] FROM WorkItems ` +
       `WHERE [System.TeamProject] = @project ` +
       `AND (${areaClause}) ` +
-      `AND [System.WorkItemType] IN ('Epic','User Story') ` +
+      `AND [System.WorkItemType] IN ('Epic','Feature','User Story','Research Spike') ` +
       `ORDER BY [Microsoft.VSTS.Common.Priority] ASC, [System.Id] ASC`,
   }) as { workItems?: { id: number }[] }
 

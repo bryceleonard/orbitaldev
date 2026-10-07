@@ -150,20 +150,18 @@ const PRIORITY_LABEL: Record<number, string> = { 1: 'Critical', 2: 'High', 3: 'M
 function AdoBacklogView({ cache }: { cache: Record<string, unknown> }) {
   const items = ((cache?.value as unknown[]) ?? []) as AdoWorkItem[]
   const epics = items.filter((i) => i.workItemType === 'Epic')
-  const stories = items.filter((i) => i.workItemType === 'User Story')
+  const features = items.filter((i) => i.workItemType === 'Feature')
+  const stories = items.filter((i) => i.workItemType === 'User Story' || i.workItemType === 'Research Spike')
 
   if (items.length === 0) {
-    return <p className="text-muted-foreground text-sm">No Epics or User Stories found in this ADO project.</p>
+    return <p className="text-muted-foreground text-sm">No backlog items found for this team.</p>
   }
 
   return (
     <div className="flex flex-col gap-6">
-      {epics.length > 0 && (
-        <BacklogSection title="Epics" items={epics} />
-      )}
-      {stories.length > 0 && (
-        <BacklogSection title="User Stories" items={stories} />
-      )}
+      {epics.length > 0 && <BacklogSection title="Epics" items={epics} />}
+      {features.length > 0 && <BacklogSection title="Features" items={features} />}
+      {stories.length > 0 && <BacklogSection title="User Stories & Spikes" items={stories} />}
     </div>
   )
 }
