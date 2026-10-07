@@ -51,11 +51,11 @@ export async function fetchBacklog(
   const wiqlUrl = `${adoOrgUrl}/${adoProject}/${adoTeam}/_apis/wit/wiql?api-version=${API_VERSION}`
   const wiqlResult = await adoPost(wiqlUrl, pat, {
     query:
-      "SELECT [System.Id] " +
-      "FROM WorkItems WHERE [System.TeamProject] = @project " +
-      "AND [System.AreaPath] UNDER @TeamAreas " +
-      "AND [System.WorkItemType] IN ('Epic','User Story') " +
-      "ORDER BY [Microsoft.VSTS.Common.Priority] ASC, [System.Id] ASC",
+      `SELECT [System.Id] ` +
+      `FROM WorkItems WHERE [System.TeamProject] = @project ` +
+      `AND [System.AreaPath] UNDER @TeamAreas('${adoProject}\\\\${adoTeam}') ` +
+      `AND [System.WorkItemType] IN ('Epic','User Story') ` +
+      `ORDER BY [Microsoft.VSTS.Common.Priority] ASC, [System.Id] ASC`,
   }) as { workItems?: { id: number }[] }
 
   const ids = (wiqlResult.workItems ?? []).map((w) => w.id).slice(0, 200)
