@@ -23,17 +23,23 @@ export default function BoardPage() {
 
 // ── ADO Board ────────────────────────────────────────────────────────────────
 
-type AdoSubTab = 'sprint' | 'devplan'
+type AdoSubTab = 'sprint' | 'devplan' | 'backlog'
+
+const ADO_CACHE_TYPE: Record<AdoSubTab, 'sprint' | 'devplan' | 'backlog'> = {
+  sprint: 'sprint',
+  devplan: 'devplan',
+  backlog: 'backlog',
+}
 
 function AdoBoardView({ projectId, boardId, orgId }: { projectId: string; boardId: string; orgId: string | undefined }) {
   const qc = useQueryClient()
-  const [subTab, setSubTab] = useState<AdoSubTab>('sprint')
+  const [subTab, setSubTab] = useState<AdoSubTab>('backlog')
   const [syncing, setSyncing] = useState(false)
   const [syncError, setSyncError] = useState<string | null>(null)
 
   const { data: cache, isLoading } = useQuery({
     queryKey: ['board-cache', orgId, projectId, boardId, subTab],
-    queryFn: () => getLatestBoardCache(orgId!, projectId, boardId, subTab === 'sprint' ? 'sprint' : 'devplan'),
+    queryFn: () => getLatestBoardCache(orgId!, projectId, boardId, ADO_CACHE_TYPE[subTab]),
     enabled: !!orgId,
   })
 
@@ -55,7 +61,7 @@ function AdoBoardView({ projectId, boardId, orgId }: { projectId: string; boardI
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
-          {(['sprint', 'devplan'] as AdoSubTab[]).map((t) => (
+          {(['backlog', 'sprint', 'devplan'] as AdoSubTab[]).map((t) => (
             <button
               key={t}
               onClick={() => setSubTab(t)}
@@ -64,7 +70,7 @@ function AdoBoardView({ projectId, boardId, orgId }: { projectId: string; boardI
                 subTab === t ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground',
               )}
             >
-              {t === 'sprint' ? 'Sprint Board' : 'Dev Plan'}
+              {t === 'sprint' ? 'Sprint Board' : t === 'devplan' ? 'Dev Plan' : 'Backlog'}
             </button>
           ))}
         </div>
@@ -87,6 +93,7 @@ function AdoBoardView({ projectId, boardId, orgId }: { projectId: string; boardI
       )}
       {cache && subTab === 'sprint' && <AdoSprintView cache={cache.payload} />}
       {cache && subTab === 'devplan' && <AdoDevPlanView cache={cache.payload} />}
+      {cache && subTab === 'backlog' && <AdoBacklogView cache={cache.payload} />}
     </div>
   )
 }
@@ -133,6 +140,63 @@ function AdoDevPlanView({ cache }: { cache: Record<string, unknown> }) {
         })}
       </tbody>
     </table>
+  )
+}
+
+type AdoWorkItem = { id: number; title: string; state: string; workItemType: string; priority: number | null }
+
+const PRIORITY_LABEL: Record<number, string> = { 1: 'Critical', 2: 'High', 3: 'Medium', 4: 'Low' }
+
+function AdoBacklogView({ cache }: { cache: Record<string, unknown> }) {
+  const items = ((cache?.value as unknown[]) ?? []) as AdoWorkItem[]
+  const epics = items.filter((i) => i.workItemType === 'Epic')
+  const stories = items.filter((i) => i.workItemType === 'User Story')
+
+  if (items.length === 0) {
+    return <p className="text-muted-foreground text-sm">No Epics or User Stories found in this ADO project.</p>
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {epics.length > 0 && (
+        <BacklogSection title="Epics" items={epics} />
+      )}
+      {stories.length > 0 && (
+        <BacklogSection title="User Stories" items={stories} />
+      )}
+    </div>
+  )
+}
+
+function BacklogSection({ title, items }: { title: string; items: AdoWorkItem[] }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{title} ({items.length})</h3>
+      <table className="w-full text-sm border rounded-md overflow-hidden">
+        <thead className="bg-muted">
+          <tr>
+            <th className="text-left p-2 w-12">ID</th>
+            <th className="text-left p-2">Title</th>
+            <th className="text-left p-2 w-32">State</th>
+            <th className="text-left p-2 w-24">Priority</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id} className="border-t hover:bg-muted/30">
+              <td className="p-2 text-muted-foreground font-mono">{item.id}</td>
+              <td className="p-2">{item.title}</td>
+              <td className="p-2">
+                <span className="inline-block px-2 py-0.5 rounded-full text-xs border">{item.state}</span>
+              </td>
+              <td className="p-2 text-muted-foreground">
+                {item.priority != null ? PRIORITY_LABEL[item.priority] ?? String(item.priority) : '—'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 

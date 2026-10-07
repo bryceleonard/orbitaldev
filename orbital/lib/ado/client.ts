@@ -34,19 +34,56 @@ async function adoPost(url: string, pat: string, body: unknown): Promise<unknown
   return res.json()
 }
 
+export interface AdoWorkItem {
+  id: number
+  title: string
+  state: string
+  workItemType: string
+  priority: number | null
+}
+
 export async function fetchBacklog(
   adoOrgUrl: string,
   adoProject: string,
   pat: string,
-): Promise<unknown> {
-  const url = `${adoOrgUrl}/${adoProject}/_apis/wit/wiql?api-version=${API_VERSION}`
-  return adoPost(url, pat, {
+): Promise<{ value: AdoWorkItem[] }> {
+  const wiqlUrl = `${adoOrgUrl}/${adoProject}/_apis/wit/wiql?api-version=${API_VERSION}`
+  const wiqlResult = await adoPost(wiqlUrl, pat, {
     query:
-      "SELECT [System.Id],[System.Title],[System.State],[System.WorkItemType] " +
+      "SELECT [System.Id] " +
       "FROM WorkItems WHERE [System.TeamProject] = @project " +
       "AND [System.WorkItemType] IN ('Epic','User Story') " +
-      "ORDER BY [Microsoft.VSTS.Common.Priority] ASC",
-  })
+      "ORDER BY [Microsoft.VSTS.Common.Priority] ASC, [System.Id] ASC",
+  }) as { workItems?: { id: number }[] }
+
+  const ids = (wiqlResult.workItems ?? []).map((w) => w.id).slice(0, 200)
+  if (ids.length === 0) return { value: [] }
+
+  const fields = [
+    'System.Id',
+    'System.Title',
+    'System.State',
+    'System.WorkItemType',
+    'Microsoft.VSTS.Common.Priority',
+  ].join(',')
+  const detailUrl =
+    `${adoOrgUrl}/${adoProject}/_apis/wit/workitems` +
+    `?ids=${ids.join(',')}&fields=${fields}&api-version=${API_VERSION}`
+  const detail = await adoGet(detailUrl, pat) as {
+    value: { id: number; fields: Record<string, unknown> }[]
+  }
+
+  return {
+    value: detail.value.map((item) => ({
+      id: item.id,
+      title: String(item.fields['System.Title'] ?? ''),
+      state: String(item.fields['System.State'] ?? ''),
+      workItemType: String(item.fields['System.WorkItemType'] ?? ''),
+      priority: item.fields['Microsoft.VSTS.Common.Priority'] != null
+        ? Number(item.fields['Microsoft.VSTS.Common.Priority'])
+        : null,
+    })),
+  }
 }
 
 export async function fetchSprint(
