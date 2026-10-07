@@ -160,8 +160,20 @@ export async function GET(
 
     let payload: unknown
     if (type === 'backlog') payload = await fetchBacklog(board.adoOrgUrl, board.adoProject, pat)
-    else if (type === 'sprint') payload = await fetchSprint(board.adoOrgUrl, board.adoProject, board.adoTeam, pat)
-    else payload = await fetchDevPlan(board.adoOrgUrl, board.adoProject, pat)
+    else if (type === 'sprint') {
+      try {
+        payload = await fetchSprint(board.adoOrgUrl, board.adoProject, board.adoTeam, pat)
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e)
+        if (msg.includes('CurrentIterationDoesNotExistException')) {
+          return NextResponse.json(
+            { error: 'No active sprint in ADO — no iteration covers today\'s date. Try the Dev Plan tab instead.' },
+            { status: 422 },
+          )
+        }
+        throw e
+      }
+    } else payload = await fetchDevPlan(board.adoOrgUrl, board.adoProject, pat)
 
     const fetchedAt = await writeCache(orgId, projectId, boardId, type, payload)
     return NextResponse.json({ type, payload, fetchedAt, fromCache: false })
