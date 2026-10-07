@@ -48,12 +48,25 @@ export async function fetchBacklog(
   adoTeam: string,
   pat: string,
 ): Promise<{ value: AdoWorkItem[] }> {
-  const wiqlUrl = `${adoOrgUrl}/${adoProject}/${adoTeam}/_apis/wit/wiql?api-version=${API_VERSION}`
+  // Resolve the team's configured area paths so we can scope the WIQL query
+  const teamFieldUrl =
+    `${adoOrgUrl}/${adoProject}/${adoTeam}/_apis/work/teamsettings/teamfieldvalues` +
+    `?api-version=${API_VERSION}`
+  const teamField = await adoGet(teamFieldUrl, pat) as {
+    values: { value: string; includeChildren: boolean }[]
+  }
+  const areaClause = teamField.values
+    .map((v) => v.includeChildren
+      ? `[System.AreaPath] UNDER '${v.value}'`
+      : `[System.AreaPath] = '${v.value}'`)
+    .join(' OR ')
+
+  const wiqlUrl = `${adoOrgUrl}/${adoProject}/_apis/wit/wiql?api-version=${API_VERSION}`
   const wiqlResult = await adoPost(wiqlUrl, pat, {
     query:
-      `SELECT [System.Id] ` +
-      `FROM WorkItems WHERE [System.TeamProject] = @project ` +
-      `AND [System.AreaPath] IN @TeamAreas('${adoProject}\\\\${adoTeam}') ` +
+      `SELECT [System.Id] FROM WorkItems ` +
+      `WHERE [System.TeamProject] = @project ` +
+      `AND (${areaClause}) ` +
       `AND [System.WorkItemType] IN ('Epic','User Story') ` +
       `ORDER BY [Microsoft.VSTS.Common.Priority] ASC, [System.Id] ASC`,
   }) as { workItems?: { id: number }[] }
