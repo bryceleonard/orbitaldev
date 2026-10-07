@@ -72,17 +72,24 @@ export async function POST(req: NextRequest) {
   const encoder = new TextEncoder()
   const readable = new ReadableStream({
     async start(controller) {
-      for await (const chunk of stream) {
-        if (
-          chunk.type === 'content_block_delta' &&
-          chunk.delta.type === 'text_delta'
-        ) {
-          controller.enqueue(encoder.encode(chunk.delta.text))
+      try {
+        for await (const chunk of stream) {
+          if (
+            chunk.type === 'content_block_delta' &&
+            chunk.delta.type === 'text_delta'
+          ) {
+            controller.enqueue(encoder.encode(chunk.delta.text))
+          }
         }
+        const citations = sources.map((s) => ({ fileId: s.fileId, fileName: s.fileName }))
+        controller.enqueue(encoder.encode(`\nCITATIONS:${JSON.stringify({ citations })}`))
+      } catch (err) {
+        console.error('[/api/files/query] stream error:', err)
+        const msg = err instanceof Error ? err.message : String(err)
+        controller.enqueue(encoder.encode(`\nERROR:${msg}`))
+      } finally {
+        controller.close()
       }
-      const citations = sources.map((s) => ({ fileId: s.fileId, fileName: s.fileName }))
-      controller.enqueue(encoder.encode(`\nCITATIONS:${JSON.stringify({ citations })}`))
-      controller.close()
     },
   })
 

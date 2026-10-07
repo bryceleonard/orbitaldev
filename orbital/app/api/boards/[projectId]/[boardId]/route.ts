@@ -113,42 +113,42 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ projectId: string; boardId: string }> },
 ) {
-  const uid = await getUid(req)
-  if (!uid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { projectId, boardId } = await params
-  const type = (req.nextUrl.searchParams.get('type') ?? 'sprint') as AdoCacheType
-  const force = req.nextUrl.searchParams.get('force') === '1'
-
-  const found = await getOrgAndProject(projectId)
-  if (!found) return NextResponse.json({ error: 'Project not found' }, { status: 404 })
-
-  const { orgId, project } = found
-  const members = project['members'] as Record<string, string>
-  if (!members[uid]) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-
-  const boards = (project['trackerBoards'] ?? []) as TrackerBoard[]
-  const board = boards.find((b) => b.id === boardId)
-  if (!board) return NextResponse.json({ error: 'Board not found' }, { status: 404 })
-
-  const cacheType: AdoCacheType = board.type === 'beads' ? 'beads-issues' : type
-
-  if (!force) {
-    const cached = await getCached(orgId, projectId, boardId, cacheType)
-    if (cached) {
-      return NextResponse.json({
-        type: cacheType,
-        payload: cached['payload'],
-        fetchedAt: (cached['fetchedAt'] as { toDate?: () => Date } | null)?.toDate?.().toISOString() ?? String(cached['fetchedAt']),
-        fromCache: true,
-      })
-    }
-  }
-
-  const pat = process.env.ADO_PAT
-  if (!pat) return NextResponse.json({ error: 'ADO_PAT environment variable is not configured' }, { status: 500 })
-
   try {
+    const uid = await getUid(req)
+    if (!uid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { projectId, boardId } = await params
+    const type = (req.nextUrl.searchParams.get('type') ?? 'sprint') as AdoCacheType
+    const force = req.nextUrl.searchParams.get('force') === '1'
+
+    const found = await getOrgAndProject(projectId)
+    if (!found) return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+
+    const { orgId, project } = found
+    const members = project['members'] as Record<string, string>
+    if (!members[uid]) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const boards = (project['trackerBoards'] ?? []) as TrackerBoard[]
+    const board = boards.find((b) => b.id === boardId)
+    if (!board) return NextResponse.json({ error: 'Board not found' }, { status: 404 })
+
+    const cacheType: AdoCacheType = board.type === 'beads' ? 'beads-issues' : type
+
+    if (!force) {
+      const cached = await getCached(orgId, projectId, boardId, cacheType)
+      if (cached) {
+        return NextResponse.json({
+          type: cacheType,
+          payload: cached['payload'],
+          fetchedAt: (cached['fetchedAt'] as { toDate?: () => Date } | null)?.toDate?.().toISOString() ?? String(cached['fetchedAt']),
+          fromCache: true,
+        })
+      }
+    }
+
+    const pat = process.env.ADO_PAT
+    if (!pat) return NextResponse.json({ error: 'ADO_PAT environment variable is not configured' }, { status: 500 })
+
     if (board.type === 'beads') {
       const text = await fetchBeadsIssues(
         board.adoOrgUrl, board.adoProject, board.beadsRepo, board.beadsBranch || 'main', pat,
@@ -166,6 +166,8 @@ export async function GET(
     const fetchedAt = await writeCache(orgId, projectId, boardId, type, payload)
     return NextResponse.json({ type, payload, fetchedAt, fromCache: false })
   } catch (e) {
-    return NextResponse.json({ error: 'Failed to fetch board data' }, { status: 502 })
+    const msg = e instanceof Error ? e.message : String(e)
+    console.error('[boards GET]', msg)
+    return NextResponse.json({ error: msg }, { status: 502 })
   }
 }

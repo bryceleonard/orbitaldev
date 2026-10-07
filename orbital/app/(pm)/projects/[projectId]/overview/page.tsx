@@ -96,9 +96,16 @@ function AskOrbital({ orgId, projectId }: { orgId: string; projectId: string }) 
         const { done, value } = await reader.read()
         if (done) break
         full += decoder.decode(value, { stream: true })
+        const errorIdx = full.lastIndexOf('\nERROR:')
+        if (errorIdx >= 0) {
+          setAnswer('Something went wrong. Try again.')
+          return
+        }
         const citationIdx = full.lastIndexOf('\nCITATIONS:')
         setAnswer(citationIdx >= 0 ? full.slice(0, citationIdx) : full)
       }
+    } catch {
+      setAnswer('Something went wrong. Try again.')
     } finally {
       setLoading(false)
     }
