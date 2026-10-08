@@ -32,8 +32,9 @@ function buildVelocityData(issues: BeadsIssue[]): VelocityPoint[] {
   const byWeek: Record<string, number> = {}
 
   for (const b of issues) {
-    if (b.status === 'closed' && b.updated_at) {
-      const key = getMondayKey(b.updated_at)
+    const ts = b.updated_at ?? b.created_at
+    if (b.status === 'closed' && ts) {
+      const key = getMondayKey(ts)
       byWeek[key] = (byWeek[key] ?? 0) + 1
     }
   }
@@ -72,7 +73,7 @@ export function BeadsVelocity({ issues, maxWeeks, fill }: { issues: BeadsIssue[]
     return maxWeeks ? all.slice(-maxWeeks) : all
   }, [issues, maxWeeks])
 
-  if (data.length < 2) return null
+  if (data.length === 0) return null
 
   const avg = Math.round(data.reduce((s, d) => s + d.count, 0) / data.length)
 
