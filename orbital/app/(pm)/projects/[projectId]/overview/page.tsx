@@ -201,13 +201,7 @@ export default function OverviewPage() {
         <IntelligenceFeed files={files} />
       </div>
 
-      {/* Zone 3 — Ask Orbital */}
-      {orgId && (
-        <div className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Ask Orbital</h2>
-          <AskOrbital orgId={orgId} projectId={projectId} />
-        </div>
-      )}
+      {/* Zone 3 — Ask Orbital (hidden) */}
 
       {/* Project settings — below the fold */}
       <div className="border-t pt-6 flex flex-col gap-6">
