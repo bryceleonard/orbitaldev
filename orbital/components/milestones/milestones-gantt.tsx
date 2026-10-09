@@ -76,19 +76,38 @@ export function MilestonesGantt({ milestones, showTooltips = false }: Props) {
 
   const mondays = getMondaysInRange(rangeStart, rangeEnd)
   const weeks = mondays.length
-  const minWidth = Math.max(700, weeks * 80 + 220)
+  const timelineMinWidth = Math.max(500, weeks * 80)
+  const LABEL_W = 280
 
   function formatShort(d: Date): string {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border bg-card">
-      <div style={{ minWidth }}>
-        {/* Header row */}
-        <div className="flex border-b">
-          <div className="flex-shrink-0 sticky left-0 z-10 bg-card border-r border-border/40" style={{ width: 220 }} />
-          <div className="flex-1 relative h-8">
+    <div className="flex rounded-xl border bg-card overflow-hidden">
+      {/* Fixed label column */}
+      <div className="flex-shrink-0 border-r border-border/40 bg-card" style={{ width: LABEL_W }}>
+        <div className="h-8 border-b" />
+        {sorted.map((milestone) => (
+          <div
+            key={milestone.id}
+            className="h-10 flex items-center px-3 border-b last:border-b-0"
+          >
+            <span
+              className="text-xs font-medium text-foreground truncate"
+              title={milestone.name}
+            >
+              {milestone.name}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Scrollable timeline */}
+      <div className="flex-1 overflow-x-auto">
+        <div style={{ minWidth: timelineMinWidth }}>
+          {/* Header row */}
+          <div className="relative h-8 border-b">
             {mondays.map((monday, i) => {
               const left = daysFraction(rangeStart, monday, totalDays) * 100
               return (
@@ -102,27 +121,16 @@ export function MilestonesGantt({ milestones, showTooltips = false }: Props) {
               )
             })}
           </div>
-        </div>
 
-        {/* Milestone rows */}
-        {sorted.map((milestone) => {
-          const startFrac = daysFraction(rangeStart, new Date(milestone.startDate), totalDays)
-          const endFrac = daysFraction(rangeStart, new Date(milestone.endDate), totalDays)
-          const widthFrac = Math.max(0.01, endFrac - startFrac)
-          const isHovered = hoveredId === milestone.id
+          {/* Milestone rows */}
+          {sorted.map((milestone) => {
+            const startFrac = daysFraction(rangeStart, new Date(milestone.startDate), totalDays)
+            const endFrac = daysFraction(rangeStart, new Date(milestone.endDate), totalDays)
+            const widthFrac = Math.max(0.01, endFrac - startFrac)
+            const isHovered = hoveredId === milestone.id
 
-          return (
-            <div key={milestone.id} className="flex border-b last:border-b-0 h-12 items-center">
-              {/* Label */}
-              <div
-                className="flex-shrink-0 sticky left-0 z-10 bg-card border-r border-border/40 px-3 py-1 text-sm font-medium text-foreground"
-                style={{ width: 220 }}
-              >
-                {milestone.name}
-              </div>
-
-              {/* Timeline */}
-              <div className="flex-1 relative h-full">
+            return (
+              <div key={milestone.id} className="h-10 relative border-b last:border-b-0">
                 {/* Week gridlines */}
                 {mondays.map((monday, i) => {
                   const left = daysFraction(rangeStart, monday, totalDays) * 100
@@ -137,21 +145,15 @@ export function MilestonesGantt({ milestones, showTooltips = false }: Props) {
 
                 {/* Bar */}
                 <div
-                  className={`absolute top-3 h-6 rounded flex items-center px-2 cursor-default overflow-hidden ${barClasses(milestone.status)}`}
-                  style={{
-                    left: `${startFrac * 100}%`,
-                    width: `${widthFrac * 100}%`,
-                  }}
+                  className={`absolute top-2 h-6 rounded flex items-center px-2 cursor-default overflow-hidden ${barClasses(milestone.status)}`}
+                  style={{ left: `${startFrac * 100}%`, width: `${widthFrac * 100}%` }}
                   onMouseEnter={() => showTooltips && setHoveredId(milestone.id)}
                   onMouseLeave={() => showTooltips && setHoveredId(null)}
                 >
                   <span className="text-xs truncate">{milestone.name}</span>
 
-                  {/* Tooltip */}
                   {showTooltips && isHovered && (
-                    <div
-                      className="absolute z-50 bottom-full mb-2 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground border rounded-lg shadow-lg px-3 py-2 text-xs whitespace-nowrap pointer-events-none"
-                    >
+                    <div className="absolute z-50 bottom-full mb-2 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground border rounded-lg shadow-lg px-3 py-2 text-xs whitespace-nowrap pointer-events-none">
                       <p className="font-semibold">{milestone.name}</p>
                       <p className="text-muted-foreground">{STATUS_LABELS[milestone.status]}</p>
                       <p className="text-muted-foreground">{milestone.startDate} – {milestone.endDate}</p>
@@ -159,9 +161,9 @@ export function MilestonesGantt({ milestones, showTooltips = false }: Props) {
                   )}
                 </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
     </div>
   )

@@ -104,18 +104,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Ask Orbital */}
-        <section className="px-4 py-16 max-w-4xl mx-auto w-full text-center flex flex-col items-center gap-4">
-          <h2 className="text-2xl font-semibold">Ask Orbital anything</h2>
-          <p className="text-muted-foreground max-w-lg">
-            Once your files are processed, ask natural language questions about your project.
-            Orbital searches across all your documents and answers with citations.
-          </p>
-          <div className="font-mono text-sm bg-muted rounded-md px-4 py-3 text-left max-w-md w-full">
-            <span className="text-muted-foreground">You: </span>
-            What did we decide about the API design last week?
-          </div>
-        </section>
+        {/* Ask Orbital (hidden) */}
 
         <footer className="text-center text-xs text-muted-foreground py-8 border-t">
           © {new Date().getFullYear()} Orbital

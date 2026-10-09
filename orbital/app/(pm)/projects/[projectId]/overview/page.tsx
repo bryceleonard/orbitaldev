@@ -96,9 +96,16 @@ function AskOrbital({ orgId, projectId }: { orgId: string; projectId: string }) 
         const { done, value } = await reader.read()
         if (done) break
         full += decoder.decode(value, { stream: true })
+        const errorIdx = full.lastIndexOf('\nERROR:')
+        if (errorIdx >= 0) {
+          setAnswer('Something went wrong. Try again.')
+          return
+        }
         const citationIdx = full.lastIndexOf('\nCITATIONS:')
         setAnswer(citationIdx >= 0 ? full.slice(0, citationIdx) : full)
       }
+    } catch {
+      setAnswer('Something went wrong. Try again.')
     } finally {
       setLoading(false)
     }
@@ -194,13 +201,7 @@ export default function OverviewPage() {
         <IntelligenceFeed files={files} />
       </div>
 
-      {/* Zone 3 — Ask Orbital */}
-      {orgId && (
-        <div className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Ask Orbital</h2>
-          <AskOrbital orgId={orgId} projectId={projectId} />
-        </div>
-      )}
+      {/* Zone 3 — Ask Orbital (hidden) */}
 
       {/* Project settings — below the fold */}
       <div className="border-t pt-6 flex flex-col gap-6">
