@@ -328,7 +328,7 @@ function generateHtml(
     <!-- Schedule + Budget -->
     <section style="display:flex;gap:24px;margin-bottom:32px;">
       ${metricBlock('Schedule', schedulePct, project.statusHeader.scheduleStatus, total ? `${elapsed} of ${total} days` : 'No dates set')}
-      ${metricBlock('Budget', budgetPct, project.statusHeader.budgetStatus, project.sow.totalHours ? `${hoursConsumed} of ${project.sow.totalHours} hrs` : 'No budget set')}
+      ${metricBlock('Hours', budgetPct, project.statusHeader.budgetStatus, project.sow.totalHours ? `${hoursConsumed} of ${project.sow.totalHours} hrs` : 'No hours set')}
     </section>
 
     ${resources.length > 0 ? `

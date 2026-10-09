@@ -152,15 +152,15 @@ export default function PortalOverviewPage() {
           metricLine={`${daysElapsed} of ${totalDays} days`}
         />
         <MetricCard
-          label="Budget"
+          label="Hours"
           percent={budgetPct}
           status={project.statusHeader.budgetStatus}
           centerLabel={project.sow.totalHours ? `${budgetPct}%` : '—'}
-          centerSub="of budget"
+          centerSub="of hours"
           metricLine={
             project.sow.totalHours
               ? `${hoursConsumed} of ${project.sow.totalHours} hrs`
-              : 'No budget set'
+              : 'No hours set'
           }
         />
         {hasBeadsData && (

@@ -213,10 +213,10 @@ export default function PortalReportPage() {
             detail={totalDays ? `${daysElapsed} of ${totalDays} days` : 'No dates set'}
           />
           <MetricBlock
-            label="Budget"
+            label="Hours"
             percent={budgetPct}
             status={project.statusHeader.budgetStatus}
-            detail={project.sow.totalHours ? `${hoursConsumed} of ${project.sow.totalHours} hrs` : 'No budget set'}
+            detail={project.sow.totalHours ? `${hoursConsumed} of ${project.sow.totalHours} hrs` : 'No hours set'}
           />
         </section>
 
