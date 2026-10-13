@@ -20,7 +20,9 @@ export default function DashboardPage() {
     enabled: !!orgId && !!user,
   })
 
-  const visible = projects.filter((p) => showArchived ? p.status === 'archived' : p.status !== 'archived')
+  const visible = projects
+    .filter((p) => showArchived ? p.status === 'archived' : p.status !== 'archived')
+    .sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
 
   return (
     <div className="p-8">
